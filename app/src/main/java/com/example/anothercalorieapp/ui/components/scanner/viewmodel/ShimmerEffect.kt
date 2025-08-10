@@ -8,6 +8,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -27,10 +28,19 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.composables.icons.lucide.Lucide
 import com.composables.icons.lucide.Wheat
+import com.example.anothercalorieapp.ui.utils.getResponsiveCardHeight
+import com.example.anothercalorieapp.ui.utils.getResponsiveCornerRadius
+import com.example.anothercalorieapp.ui.utils.getResponsiveFontSize
+import com.example.anothercalorieapp.ui.utils.getResponsiveIconSize
+import com.example.anothercalorieapp.ui.utils.getResponsivePadding
+import com.example.anothercalorieapp.ui.utils.getResponsiveSize
+import com.example.anothercalorieapp.ui.utils.getResponsiveSpacing
 
 @Composable
 fun shimmerBrush(showShimmer: Boolean = true, targetValue: Float = 1000f): Brush {
@@ -94,6 +104,8 @@ fun shimmerBrushBlack(showShimmer: Boolean = true, targetValue: Float = 1000f): 
     }
 }
 
+// PERFECTLY MATCHING SHIMMER COMPONENTS
+
 @Composable
 fun ShimmerNutrientCard(
     icon: ImageVector,
@@ -101,36 +113,36 @@ fun ShimmerNutrientCard(
 ) {
     Column(
         modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
-            .background(shimmerBrushBlack()) // Use black shimmer
-            .height(100.dp)
-            .padding(8.dp),
+            .clip(RoundedCornerShape(getResponsiveCornerRadius()))
+            .background(shimmerBrushBlack())
+            .height(getResponsiveCardHeight())
+            .padding(getResponsivePadding(8.dp)),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(getResponsiveSpacing(8.dp))
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
             tint = Color.White,
-            modifier = Modifier.size(24.dp)
+            modifier = Modifier.size(getResponsiveIconSize())
         )
 
-        // Shimmer for value - matches real Text fontSize 18.sp
+        // Shimmer for value text - matches Text(fontSize = getResponsiveFontSize(18.sp))
         Box(
             modifier = Modifier
-                .width(40.dp)
-                .height(22.dp)
-                .clip(RoundedCornerShape(4.dp))
-                .background(shimmerBrush()) // Keep light shimmer for text
+                .width(getResponsiveSize(40.dp))
+                .height(getResponsiveFontSize(18.sp, minScale = 0.8f, maxScale = 1.0f).value.dp * 1.2f)
+                .clip(RoundedCornerShape(getResponsiveCornerRadius(4.dp)))
+                .background(shimmerBrush())
         )
 
-        // Shimmer for unit name - matches real Text fontSize 12.sp
+        // Shimmer for unit name text - matches Text(fontSize = getResponsiveFontSize(12.sp))
         Box(
             modifier = Modifier
-                .width(50.dp)
-                .height(15.dp)
-                .clip(RoundedCornerShape(4.dp))
-                .background(shimmerBrush()) // Keep light shimmer for text
+                .width(getResponsiveSize(50.dp))
+                .height(getResponsiveFontSize(12.sp, minScale = 0.8f, maxScale = 1.0f).value.dp * 1.2f)
+                .clip(RoundedCornerShape(getResponsiveCornerRadius(4.dp)))
+                .background(shimmerBrush())
         )
     }
 }
@@ -140,33 +152,17 @@ fun ShimmerMealName(
     modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = modifier
-            .fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         contentAlignment = Alignment.Center
     ) {
         Box(
             modifier = Modifier
-                .fillMaxWidth(0.35f) //
-                .height(24.dp)
-                .clip(RoundedCornerShape(4.dp))
+                .fillMaxWidth(0.6f)
+                .height(getResponsiveFontSize(20.sp, minScale = 0.8f, maxScale = 1.0f).value.dp * 1.3f)
+                .clip(RoundedCornerShape(getResponsiveCornerRadius(4.dp)))
                 .background(shimmerBrush())
         )
     }
-}
-
-@Composable
-fun ShimmerText(
-    width: Dp,
-    height: Dp = 16.dp,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier
-            .width(width)
-            .height(height)
-            .clip(RoundedCornerShape(4.dp))
-            .background(shimmerBrush())
-    )
 }
 
 @Composable
@@ -177,41 +173,43 @@ fun ShimmerHealthScore(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.Start
     ) {
-        // Title row shimmer - matches "Health Score: Grade X" layout
-        Row() {
+        // Title row shimmer - matches "Health Score: Grade X" layout exactly
+        Row {
             Box(
                 modifier = Modifier
-                    .width(100.dp)
-                    .height(17.dp)
-                    .clip(RoundedCornerShape(4.dp))
+                    .width(getResponsiveSize(100.dp))
+                    .height(getResponsiveFontSize(14.sp, minScale = 0.8f, maxScale = 1.0f).value.dp * 1.2f)
+                    .clip(RoundedCornerShape(getResponsiveCornerRadius(4.dp)))
                     .background(shimmerBrush())
             )
 
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(getResponsivePadding(8.dp)))
 
             Box(
                 modifier = Modifier
-                    .width(60.dp)
-                    .height(17.dp)
-                    .clip(RoundedCornerShape(4.dp))
+                    .width(getResponsiveSize(60.dp))
+                    .height(getResponsiveFontSize(14.sp, minScale = 0.8f, maxScale = 1.0f).value.dp * 1.2f)
+                    .clip(RoundedCornerShape(getResponsiveCornerRadius(4.dp)))
                     .background(shimmerBrush())
             )
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(getResponsivePadding(8.dp)))
 
-        // Progress bar shimmer - matches the horizontal line structure
-        Box(
+        // Progress bar shimmer - matches exact BoxWithConstraints structure
+        BoxWithConstraints(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp)
-                .height(20.dp)
+                .padding(horizontal = getResponsivePadding(8.dp))
+                .height(getResponsiveSize(20.dp))
         ) {
+            val strokeWidth = getResponsiveSize(12.dp)
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(12.dp)
-                    .clip(RoundedCornerShape(6.dp))
+                    .height(strokeWidth)
+                    .clip(RoundedCornerShape(strokeWidth / 2))
                     .background(shimmerBrush())
                     .align(Alignment.Center)
             )
@@ -231,17 +229,17 @@ fun ShimmerShareAndQuantity(
         // Share button shimmer - matches exact size and shape
         Box(
             modifier = Modifier
-                .size(52.dp)
-                .clip(RoundedCornerShape(26.dp))
+                .size(getResponsiveSize(52.dp))
+                .clip(RoundedCornerShape(getResponsiveCornerRadius(26.dp)))
                 .background(shimmerBrush())
         )
 
-        // Quantity controls shimmer - matches the real component structure
+        // Quantity controls shimmer - matches the real component structure exactly
         Box(
             modifier = Modifier
-                .height(52.dp)
                 .fillMaxWidth(0.4f)
-                .clip(RoundedCornerShape(28.dp))
+                .height(getResponsiveSize(52.dp))
+                .clip(RoundedCornerShape(getResponsiveCornerRadius(28.dp)))
                 .background(shimmerBrush())
         )
     }
@@ -254,37 +252,37 @@ fun ShimmerIngredientCard(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(72.dp)
-            .background(Color.White, RoundedCornerShape(12.dp))
+            .height(getResponsiveSize(72.dp))
+            .background(Color.White, RoundedCornerShape(getResponsiveCornerRadius()))
     ) {
         Row(
             modifier = Modifier.fillMaxSize(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Icon background shimmer - use black shimmer
+            // Icon background shimmer - matches exact size and corner radius
             Box(
                 modifier = Modifier
-                    .size(52.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(shimmerBrushBlack()), // Use black shimmer
+                    .size(getResponsiveSize(52.dp))
+                    .clip(RoundedCornerShape(getResponsiveCornerRadius(8.dp)))
+                    .background(shimmerBrushBlack()),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Lucide.Wheat,
                     contentDescription = "Ingredient Icon",
                     tint = Color.White,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(getResponsiveIconSize())
                 )
             }
 
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(getResponsivePadding(12.dp)))
 
-            // Text content shimmer - matches the real layout structure
+            // Text content shimmer - matches the real layout structure exactly
             Column(
                 modifier = Modifier
-                    .height(72.dp)
+                    .height(getResponsiveSize(72.dp))
                     .fillMaxWidth()
-                    .padding(vertical = 10.dp),
+                    .padding(vertical = getResponsivePadding(10.dp)),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
                 // Top row: ingredient name + quantity
@@ -293,29 +291,31 @@ fun ShimmerIngredientCard(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    // Ingredient name shimmer - matches Text(fontSize = getResponsiveFontSize(16.sp))
                     Box(
                         modifier = Modifier
-                            .width(120.dp)
-                            .height(19.dp)
-                            .clip(RoundedCornerShape(4.dp))
+                            .width(getResponsiveSize(120.dp))
+                            .height(getResponsiveFontSize(16.sp, minScale = 0.8f, maxScale = 1.0f).value.dp * 1.2f)
+                            .clip(RoundedCornerShape(getResponsiveCornerRadius(4.dp)))
                             .background(shimmerBrush())
                     )
 
+                    // Quantity shimmer - matches Text(fontSize = getResponsiveFontSize(14.sp))
                     Box(
                         modifier = Modifier
-                            .width(60.dp)
-                            .height(18.dp)
-                            .clip(RoundedCornerShape(4.dp))
+                            .width(getResponsiveSize(60.dp))
+                            .height(getResponsiveFontSize(14.sp, minScale = 0.8f, maxScale = 1.0f).value.dp * 1.2f)
+                            .clip(RoundedCornerShape(getResponsiveCornerRadius(4.dp)))
                             .background(shimmerBrush())
                     )
                 }
 
-                // Bottom: calories
+                // Calories shimmer (bottom) - matches Text(fontSize = getResponsiveFontSize(12.sp))
                 Box(
                     modifier = Modifier
-                        .width(80.dp)
-                        .height(17.dp)
-                        .clip(RoundedCornerShape(4.dp))
+                        .width(getResponsiveSize(80.dp))
+                        .height(getResponsiveFontSize(12.sp, minScale = 0.8f, maxScale = 1.0f).value.dp * 1.2f)
+                        .clip(RoundedCornerShape(getResponsiveCornerRadius(4.dp)))
                         .background(shimmerBrush())
                 )
             }

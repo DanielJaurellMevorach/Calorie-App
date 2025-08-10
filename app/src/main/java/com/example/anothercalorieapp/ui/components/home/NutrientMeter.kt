@@ -20,7 +20,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
+import com.example.anothercalorieapp.ui.utils.getResponsiveFontSize
+import com.example.anothercalorieapp.ui.utils.getResponsiveIconSize
+import com.example.anothercalorieapp.ui.utils.getResponsiveSize
 
 @Composable
 fun NutrientMeter(
@@ -31,20 +33,22 @@ fun NutrientMeter(
     icon : ImageVector,
     modifier: Modifier = Modifier
 ) {
+    val strokeWidth = getResponsiveSize(10.dp) // Move this outside Canvas
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween,
         modifier = modifier
     ) {
         Box(
-            modifier = Modifier.size(60.dp), // Reduced from 65dp
+            modifier = Modifier.size(getResponsiveSize(60.dp)),
             contentAlignment = Alignment.Center
         ) {
             Canvas(modifier = Modifier.fillMaxSize()) {
                 drawCircle(
                     color = Color.LightGray.copy(alpha = 0.3f),
                     radius = size.width / 2,
-                    style = Stroke(width = 10.dp.toPx(), cap = StrokeCap.Round) // Slightly thinner stroke
+                    style = Stroke(width = strokeWidth.toPx(), cap = StrokeCap.Round)
                 )
             }
 
@@ -55,40 +59,38 @@ fun NutrientMeter(
                     startAngle = -90f,
                     sweepAngle = 360f * progress,
                     useCenter = false,
-                    style = Stroke(width = 10.dp.toPx(), cap = StrokeCap.Round) // Slightly thinner stroke
+                    style = Stroke(width = strokeWidth.toPx(), cap = StrokeCap.Round)
                 )
             }
 
             Box(
-                modifier = Modifier
-                    .fillMaxSize(0.5f), // Slightly smaller inner circle ratio
+                modifier = Modifier.fillMaxSize(0.5f),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = nutrient,
                     tint = color,
-                    modifier = Modifier.size(24.dp) // Reduced icon size
+                    modifier = Modifier.size(getResponsiveIconSize())
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp)) // Added extra space above grams text
+        Spacer(modifier = Modifier.height(getResponsiveSize(16.dp)))
 
         Text(
             text = "${currentValue}g",
-            fontSize = 16.sp, // Reduced font size
+            fontSize = getResponsiveFontSize(16.sp),
             fontWeight = FontWeight.W900,
             color = Color.Black
         )
 
         Text(
             text = "$nutrient left",
-            fontSize = 14.sp, // Reduced font size
+            fontSize = getResponsiveFontSize(14.sp),
             color = Color.Gray,
             fontWeight = FontWeight.W400,
             maxLines = 1
         )
     }
 }
-

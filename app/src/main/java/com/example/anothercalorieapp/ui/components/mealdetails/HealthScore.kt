@@ -22,14 +22,17 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.anothercalorieapp.ui.utils.getResponsiveFontSize
+import com.example.anothercalorieapp.ui.utils.getResponsivePadding
+import com.example.anothercalorieapp.ui.utils.getResponsiveSize
 import kotlin.math.min
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun HealthScore(
     modifier: Modifier = Modifier,
-    healthGrade: String, // Changed from healthScore: Int to healthGrade: String
-    maxScore: Int = 10, // Keep for compatibility but won't be used in display
+    healthGrade: String,
+    maxScore: Int = 10,
 ) {
     val density = LocalDensity.current
 
@@ -44,7 +47,13 @@ fun HealthScore(
     )
 
     val progress = gradeToProgress[healthGrade.uppercase()] ?: 0f
-    val maxProgress = 6f // Total chunks: A + BC(long) + DE(long) + F = 4 visual chunks, 6 progress units
+    val maxProgress = 6f
+
+    // Pre-calculate all responsive values outside Canvas
+    val strokeWidthDp = getResponsiveSize(12.dp)
+    val gapWidthDp = getResponsiveSize(24.dp)
+    val circleRadiusDp = getResponsiveSize(8.dp)
+    val canvasHeightDp = getResponsiveSize(20.dp)
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -54,33 +63,33 @@ fun HealthScore(
         Row() {
             Text(
                 text = "Health Score: ",
-                fontSize = 14.sp,
+                fontSize = getResponsiveFontSize(14.sp, minScale = 0.8f, maxScale = 1.0f),
                 color = Color.Black,
                 fontWeight = FontWeight.Normal,
-                modifier = Modifier.padding(bottom = 4.dp)
+                modifier = Modifier.padding(bottom = getResponsivePadding(4.dp))
             )
 
             Text(
                 text = "Grade $healthGrade",
-                fontSize = 14.sp,
+                fontSize = getResponsiveFontSize(14.sp, minScale = 0.8f, maxScale = 1.0f),
                 color = Color.Black,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 4.dp).offset(x = 8.dp)
+                modifier = Modifier.padding(bottom = getResponsivePadding(4.dp)).offset(x = getResponsivePadding(8.dp))
             )
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(getResponsivePadding(8.dp)))
 
         // Horizontal line with grade chunks
         BoxWithConstraints(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp)
-                .height(20.dp)
+                .padding(horizontal = getResponsivePadding(8.dp))
+                .height(getResponsiveSize(20.dp))
         ) {
             val canvasWidth = constraints.maxWidth.toFloat()
-            val strokeWidth = with(density) { 12.dp.toPx() }
-            val gapWidth = with(density) { 24.dp.toPx() }
+            val strokeWidth = with(density) { strokeWidthDp.toPx() }
+            val gapWidth = with(density) { gapWidthDp.toPx() }
 
             // Define chunk structure: A (1 unit), BC (2 units), DE (2 units), F (1 unit)
             val chunkSizes = listOf(1f, 2f, 2f, 1f) // A, BC, DE, F
@@ -91,7 +100,7 @@ fun HealthScore(
             var lastFilledChunkEndX = 0f
             var currentProgress = progress
 
-            Canvas(modifier = Modifier.fillMaxWidth().height(20.dp)) {
+            Canvas(modifier = Modifier.fillMaxWidth().height(canvasHeightDp)) {
                 var currentX = 0f
 
                 // Draw background chunks
@@ -142,7 +151,7 @@ fun HealthScore(
 
                 // Draw popup circle at the end of black progression
                 if (progress > 0f) {
-                    val circleRadius = with(density) { 8.dp.toPx() }
+                    val circleRadius = with(density) { circleRadiusDp.toPx() }
 
                     // Draw black filled circle
                     drawCircle(

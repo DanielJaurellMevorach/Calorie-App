@@ -24,19 +24,24 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.composables.icons.lucide.Lucide
 import com.composables.icons.lucide.Wheat
+import com.example.anothercalorieapp.ui.utils.getResponsiveCornerRadius
+import com.example.anothercalorieapp.ui.utils.getResponsiveFontSize
+import com.example.anothercalorieapp.ui.utils.getResponsiveIconSize
+import com.example.anothercalorieapp.ui.utils.getResponsivePadding
+import com.example.anothercalorieapp.ui.utils.getResponsiveSize
 
 @Composable
 fun IngredientCard(
     modifier: Modifier = Modifier,
-    ingredientName: String, // Changed from mealName
+    ingredientName: String,
     calories: Int,
-    quantity: String, // Changed from time to quantity/unit
+    quantity: String,
 ) {
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(72.dp)
-            .background(Color.White, RoundedCornerShape(12.dp))
+            .height(getResponsiveSize(72.dp))
+            .background(Color.White, RoundedCornerShape(getResponsiveCornerRadius()))
     ) {
         Row(
             modifier = Modifier.fillMaxSize(),
@@ -45,26 +50,26 @@ fun IngredientCard(
             // Black background image with white icon
             Box(
                 modifier = Modifier
-                    .size(52.dp)
-                    .background(Color.Black, RoundedCornerShape(8.dp)),
+                    .size(getResponsiveSize(52.dp))
+                    .background(Color.Black, RoundedCornerShape(getResponsiveCornerRadius(8.dp))),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Lucide.Wheat,
                     contentDescription = "Ingredient Icon",
                     tint = Color.White,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(getResponsiveIconSize())
                 )
             }
 
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(getResponsivePadding(12.dp)))
 
             // Text content
             Column(
                 modifier = Modifier
-                    .height(72.dp)
+                    .height(getResponsiveSize(72.dp))
                     .fillMaxWidth()
-                    .padding(vertical = 10.dp), // Increased top padding to push content down together
+                    .padding(vertical = getResponsivePadding(10.dp)),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
                 // Ingredient name + quantity in one row
@@ -75,33 +80,30 @@ fun IngredientCard(
                 ) {
                     Text(
                         text = ingredientName,
-                        fontSize = 16.sp,
+                        fontSize = getResponsiveFontSize(16.sp, minScale = 0.8f, maxScale = 1.0f),
                         fontWeight = FontWeight.SemiBold,
                         color = Color.Black
-                        // Removed offset modifier
                     )
                     Box(
                         modifier = Modifier
-                            .background(Color(0xFFF0F0F0), shape = RoundedCornerShape(4.dp))
-                        // Removed offset modifier
+                            .background(Color(0xFFF0F0F0), shape = RoundedCornerShape(getResponsiveCornerRadius(4.dp)))
                     ) {
                         Text(
                             text = quantity,
-                            fontSize = 14.sp,
+                            fontSize = getResponsiveFontSize(14.sp, minScale = 0.8f, maxScale = 1.0f),
                             fontWeight = FontWeight.SemiBold,
                             color = Color.Black,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            modifier = Modifier.padding(horizontal = getResponsivePadding(6.dp), vertical = getResponsivePadding(2.dp))
                         )
                     }
                 }
 
-                // Just calories (removed the nutrition breakdown)
+                // Just calories
                 Text(
                     text = "$calories Calories",
-                    fontSize = 12.sp,
+                    fontSize = getResponsiveFontSize(12.sp, minScale = 0.8f, maxScale = 1.0f),
                     fontWeight = FontWeight.Bold,
                     color = Color(0xF5000000)
-                    // Removed offset modifier
                 )
             }
         }

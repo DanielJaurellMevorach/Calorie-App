@@ -70,6 +70,7 @@ import com.composables.icons.lucide.Lucide
 import com.composables.icons.lucide.SwitchCamera
 import com.composables.icons.lucide.Zap
 import com.composables.icons.lucide.ZapOff
+import com.example.anothercalorieapp.MealDetailScreenRoute
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -302,15 +303,15 @@ fun CameraScreen(
                         },
                         modifier = Modifier
                             .size(48.dp)
-                            .background(
-                                if (isFlashOn) Color.Yellow.copy(alpha = 0.2f) else Color.Gray.copy(alpha = 0.1f),
+                            .background(    
+                                Color.Gray.copy(alpha = 0.1f),
                                 CircleShape
                             )
                     ) {
                         Icon(
                             imageVector = if (isFlashOn) Lucide.Zap else Lucide.ZapOff,
                             contentDescription = if (isFlashOn) "Turn Flash Off" else "Turn Flash On",
-                            tint = if (isFlashOn) Color.Yellow else Color.Black,
+                            tint = Color.Black,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -453,8 +454,8 @@ private fun takePhoto(
                 // Encode the URI to be passed as a navigation argument
                 val encodedUri = Uri.encode(savedUri.toString())
 
-                // Navigate to the meal details screen, passing the image URI
-                navController.navigate("meal_details_route/$encodedUri")
+                // Navigate to the meal details screen using type-safe route
+                navController.navigate(MealDetailScreenRoute(encodedUri))
             }
         }
     )

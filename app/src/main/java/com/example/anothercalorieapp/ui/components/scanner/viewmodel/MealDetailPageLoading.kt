@@ -43,6 +43,11 @@ import com.composables.icons.lucide.Flame
 import com.composables.icons.lucide.Lucide
 import com.composables.icons.lucide.Trash2
 import com.composables.icons.lucide.Wheat
+import com.example.anothercalorieapp.ui.utils.getResponsiveCornerRadius
+import com.example.anothercalorieapp.ui.utils.getResponsiveIconSize
+import com.example.anothercalorieapp.ui.utils.getResponsivePadding
+import com.example.anothercalorieapp.ui.utils.getResponsiveSize
+import com.example.anothercalorieapp.ui.utils.getResponsiveSpacing
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
@@ -58,9 +63,9 @@ fun MealDetailPageLoading(
     ) {
         val fullHeight = with(density) { constraints.maxHeight.toDp() }
 
-        val minSheetHeight = 88.dp
+        val minSheetHeight = getResponsiveSize(88.dp)
         val maxSheetHeight = fullHeight * 0.70f
-        val sheetInitialHeight = 200.dp
+        val sheetInitialHeight = getResponsiveSize(200.dp)
 
         var sheetHeight by remember { mutableStateOf(sheetInitialHeight) }
 
@@ -76,35 +81,41 @@ fun MealDetailPageLoading(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 48.dp, start = 16.dp, end = 16.dp),
+                .padding(
+                    top = getResponsivePadding(48.dp),
+                    start = getResponsivePadding(16.dp),
+                    end = getResponsivePadding(16.dp)
+                ),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(
                 onClick = onBackClick,
                 modifier = Modifier
-                    .size(44.dp)
-                    .background(Color.Black.copy(alpha = 0.9f), shape = RoundedCornerShape(32.dp))
-                    .padding(12.dp),
+                    .size(getResponsiveSize(44.dp))
+                    .background(Color.Black.copy(alpha = 0.9f), shape = RoundedCornerShape(getResponsiveCornerRadius(32.dp)))
+                    .padding(getResponsivePadding(12.dp)),
             ) {
                 Icon(
                     imageVector = Lucide.ChevronLeft,
                     contentDescription = "Go back",
                     tint = Color.White,
+                    modifier = Modifier.size(getResponsiveIconSize(20.dp))
                 )
             }
 
             IconButton(
                 onClick = onDeleteClick,
                 modifier = Modifier
-                    .size(44.dp)
-                    .background(Color.White, shape = RoundedCornerShape(32.dp))
-                    .padding(12.dp),
+                    .size(getResponsiveSize(44.dp))
+                    .background(Color.White, shape = RoundedCornerShape(getResponsiveCornerRadius(32.dp)))
+                    .padding(getResponsivePadding(12.dp)),
             ) {
                 Icon(
                     imageVector = Lucide.Trash2,
                     contentDescription = "Delete Meal",
                     tint = Color.Black.copy(alpha = 0.9f),
+                    modifier = Modifier.size(getResponsiveIconSize(20.dp))
                 )
             }
         }
@@ -115,14 +126,14 @@ fun MealDetailPageLoading(
                 .fillMaxWidth()
                 .height(fullHeight)
                 .offset { IntOffset(x = 0, y = (fullHeight - sheetHeight).roundToPx()) }
-                .clip(RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp))
+                .clip(RoundedCornerShape(topStart = getResponsiveCornerRadius(40.dp), topEnd = getResponsiveCornerRadius(40.dp)))
                 .background(Color.White)
         ) {
             // Drag handle and gesture detector
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(40.dp)
+                    .height(getResponsiveSize(40.dp))
                     .pointerInput(Unit) {
                         detectVerticalDragGestures { change, dragAmount ->
                             change.consume()
@@ -134,9 +145,9 @@ fun MealDetailPageLoading(
             ) {
                 Spacer(
                     modifier = Modifier
-                        .height(4.dp)
-                        .width(40.dp)
-                        .background(Color.Gray.copy(alpha = 0.5f), RoundedCornerShape(2.dp))
+                        .height(getResponsiveSize(4.dp))
+                        .width(getResponsiveSize(40.dp))
+                        .background(Color.Gray.copy(alpha = 0.5f), RoundedCornerShape(getResponsiveCornerRadius(2.dp)))
                 )
             }
 
@@ -145,17 +156,17 @@ fun MealDetailPageLoading(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .padding(horizontal = 16.dp)
+                    .padding(horizontal = getResponsivePadding(16.dp))
             ) {
                 // Shimmer meal name
                 ShimmerMealName()
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(getResponsiveSpacing(24.dp)))
 
                 // Shimmer nutrient cards
-                Row (
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(getResponsiveSpacing(16.dp)),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     ShimmerNutrientCard(
@@ -176,24 +187,24 @@ fun MealDetailPageLoading(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(28.dp))
+                Spacer(modifier = Modifier.height(getResponsiveSpacing(28.dp)))
 
                 // Shimmer health score
                 ShimmerHealthScore()
 
-                Spacer(modifier = Modifier.height(28.dp))
+                Spacer(modifier = Modifier.height(getResponsiveSpacing(28.dp)))
 
                 // Shimmer share and quantity
                 ShimmerShareAndQuantity()
 
-                Spacer(modifier = Modifier.height(28.dp))
+                Spacer(modifier = Modifier.height(getResponsiveSpacing(28.dp)))
 
                 // Shimmer ingredients section
                 LazyColumn(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(getResponsiveSpacing(8.dp))
                 ) {
-                    items(1) { // Show 3 shimmer ingredient cards
+                    items(3) { // Show 3 shimmer ingredient cards
                         ShimmerIngredientCard()
                     }
                 }

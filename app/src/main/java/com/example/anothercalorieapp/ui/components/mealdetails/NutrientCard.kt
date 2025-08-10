@@ -17,6 +17,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.anothercalorieapp.ui.utils.getResponsiveCardHeight
+import com.example.anothercalorieapp.ui.utils.getResponsiveCornerRadius
+import com.example.anothercalorieapp.ui.utils.getResponsiveFontSize
+import com.example.anothercalorieapp.ui.utils.getResponsiveIconSize
+import com.example.anothercalorieapp.ui.utils.getResponsivePadding
+import com.example.anothercalorieapp.ui.utils.getResponsiveSpacing
 
 @Composable
 fun NutrientCard(
@@ -29,34 +35,34 @@ fun NutrientCard(
         modifier = modifier
             .background(
                 color = Color.Black,
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(getResponsiveCornerRadius())
             )
-            .height(100.dp)
-            .padding(8.dp),
+            .height(getResponsiveCardHeight())
+            .padding(getResponsivePadding(8.dp)),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(getResponsiveSpacing(8.dp))
     ) {
         // Nutrient icon
         Icon(
             imageVector = icon,
             contentDescription = unitName,
             tint = Color.White,
-            modifier = Modifier.size(24.dp)
+            modifier = Modifier.size(getResponsiveIconSize())
         )
 
-        // Value (e.g., "150", "2g")
+        // Value (e.g., "150", "2g") - conservative scaling for bottom sheet
         Text(
             text = value,
             color = Color.White,
-            fontSize = 18.sp,
+            fontSize = getResponsiveFontSize(18.sp, minScale = 0.8f, maxScale = 1.0f),
             fontWeight = FontWeight.Bold
         )
 
-        // Unit name (e.g., "Calories", "Protein")
+        // Unit name (e.g., "Calories", "Protein") - conservative scaling for bottom sheet
         Text(
             text = unitName,
             color = Color.White,
-            fontSize = 12.sp,
+            fontSize = getResponsiveFontSize(12.sp, minScale = 0.8f, maxScale = 1.0f),
             fontWeight = FontWeight.Medium
         )
     }

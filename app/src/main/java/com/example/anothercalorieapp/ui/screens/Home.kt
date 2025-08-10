@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -23,18 +24,22 @@ import com.example.anothercalorieapp.R
 import com.example.anothercalorieapp.ui.components.home.CircleOverlay
 import com.example.anothercalorieapp.ui.components.home.MealCard
 import com.example.anothercalorieapp.ui.components.home.NutrientMeter
+import com.example.anothercalorieapp.ui.utils.getResponsiveFontSize
+import com.example.anothercalorieapp.ui.utils.getResponsiveSize
+import androidx.navigation.NavController
+import com.example.anothercalorieapp.ui.components.general.NavigationBar
 
 @Composable
 fun Home(
+    navController: NavController,
     modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = modifier ) {
+        modifier = modifier.fillMaxSize()
+    ) {
         LazyColumn(
             modifier = modifier.fillMaxSize()
-
         ) {
-
             item {
                 // Gray overlay with integrated CalendarCalories and CalorieSpeedometer
                 CircleOverlay()
@@ -42,7 +47,7 @@ fun Home(
 
             item {
                 Spacer(
-                    modifier = Modifier.height(160.dp)
+                    modifier = Modifier.height(getResponsiveSize(160.dp))
                 )
                 // Preview nutrient meters below the arc - centered horizontally
                 Row(
@@ -77,19 +82,19 @@ fun Home(
             }
 
             item {
-                Spacer(modifier = Modifier.height(40.dp))
+                Spacer(modifier = Modifier.height(getResponsiveSize(40.dp)))
             }
 
             item {
                 Text(
                     text = "Tracked Today: 3",
-                    fontSize = 16.sp,
+                    fontSize = getResponsiveFontSize(16.sp),
                     fontWeight = FontWeight.Bold,
                 )
             }
 
             item {
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(getResponsiveSize(16.dp)))
             }
 
             item {
@@ -100,11 +105,11 @@ fun Home(
                     proteins = 6,
                     fat = 38,
                     time = "09:10",
-                    imageRes = R.drawable.meal_two // Replace with your image resource ID
+                    imageRes = R.drawable.meal_two
                 )
 
                 Spacer(
-                    modifier = Modifier.height(16.dp)
+                    modifier = Modifier.height(getResponsiveSize(16.dp))
                 )
 
                 MealCard(
@@ -114,11 +119,11 @@ fun Home(
                     proteins = 10,
                     fat = 17,
                     time = "13:19",
-                    imageRes = R.drawable.meal_one // Replace with your image resource ID
+                    imageRes = R.drawable.meal_one
                 )
 
                 Spacer(
-                    modifier = Modifier.height(16.dp)
+                    modifier = Modifier.height(getResponsiveSize(16.dp))
                 )
 
                 MealCard(
@@ -133,8 +138,15 @@ fun Home(
             }
 
             item {
-                Spacer(modifier = Modifier.height(120.dp))
+                Spacer(modifier = Modifier.height(getResponsiveSize(120.dp)))
             }
+        }
+
+        // Navigation Bar at bottom
+        Box(
+            modifier = Modifier.align(Alignment.BottomCenter)
+        ) {
+            NavigationBar(navController = navController)
         }
     }
 }

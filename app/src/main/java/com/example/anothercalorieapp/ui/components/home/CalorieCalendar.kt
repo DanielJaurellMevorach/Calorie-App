@@ -18,19 +18,23 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.anothercalorieapp.ui.utils.getResponsiveCornerRadius
+import com.example.anothercalorieapp.ui.utils.getResponsiveFontSize
+import com.example.anothercalorieapp.ui.utils.getResponsivePadding
+import com.example.anothercalorieapp.ui.utils.getResponsiveSize
 
 @Composable
 fun CalendarCalories(
     modifier: Modifier = Modifier
 ) {
     Column {
-        Spacer(modifier = Modifier.height(52.dp))
+        Spacer(modifier = Modifier.height(getResponsiveSize(52.dp)))
 
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(72.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                .height(getResponsiveSize(72.dp)),
+            horizontalArrangement = Arrangement.spacedBy(getResponsiveSize(8.dp)),
             verticalAlignment = Alignment.CenterVertically
         ) {
             repeat(6) { index ->
@@ -43,17 +47,17 @@ fun CalendarCalories(
                         .weight(1f)
                         .background(
                             Color.White,
-                            RoundedCornerShape(24.dp)
+                            RoundedCornerShape(getResponsiveCornerRadius(24.dp))
                         )
-                        .padding(top = 2.dp),
+                        .padding(top = getResponsivePadding(2.dp)),
                     horizontalAlignment = (Alignment.CenterHorizontally),
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                    verticalArrangement = Arrangement.spacedBy(getResponsivePadding(2.dp))
                 ) {
                     // Day name - very soft gray
                     Text(
                         text = dayNames[index],
-                        color = Color(0xFFBBBBBB), // Very soft gray
-                        fontSize = 10.sp,
+                        color = Color(0xFFBBBBBB),
+                        fontSize = getResponsiveFontSize(10.sp),
                         fontWeight = FontWeight.SemiBold,
                     )
 
@@ -61,24 +65,24 @@ fun CalendarCalories(
                     Text(
                         text = dayNumbers[index],
                         color = Color.Black,
-                        fontSize = 14.sp,
+                        fontSize = getResponsiveFontSize(14.sp),
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.offset(y= (-6).dp)
+                        modifier = Modifier.offset(y = getResponsivePadding(-6.dp))
                     )
 
                     // Calories - small dark green
                     Text(
                         text = calories[index],
                         color = Color.Black,
-                        fontSize = 10.sp,
+                        fontSize = getResponsiveFontSize(10.sp),
                         fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.offset(y= (-12).dp)
+                        modifier = Modifier.offset(y = getResponsivePadding(-12.dp))
                     )
                 }
             }
         }
     }
     Spacer(
-        modifier = Modifier.height(40.dp)
+        modifier = Modifier.height(getResponsiveSize(40.dp))
     )
 }

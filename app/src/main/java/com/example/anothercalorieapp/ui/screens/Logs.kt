@@ -19,7 +19,7 @@ import com.example.anothercalorieapp.ui.utils.getResponsiveFontSize
 import com.example.anothercalorieapp.ui.utils.getResponsiveSize
 
 @Composable
-fun Profile(
+fun LogsScreen(
     navController: NavController,
     modifier: Modifier = Modifier
 ) {
@@ -35,7 +35,7 @@ fun Profile(
             Spacer(modifier = Modifier.height(getResponsiveSize(60.dp)))
 
             Text(
-                text = "Profile",
+                text = "Logs",
                 fontSize = getResponsiveFontSize(24.sp),
                 fontWeight = FontWeight.Bold
             )
@@ -48,7 +48,7 @@ fun Profile(
             )
 
             Text(
-                text = "Your profile settings and preferences will be available here.",
+                text = "Your meal logs and statistics will be displayed here.",
                 fontSize = getResponsiveFontSize(14.sp)
             )
         }

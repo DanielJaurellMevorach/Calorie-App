@@ -1,6 +1,5 @@
 package com.example.anothercalorieapp.ui.components.home
 
-import CalorieSpeedometer
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -17,6 +16,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.example.anothercalorieapp.ui.utils.getResponsivePadding
+import com.example.anothercalorieapp.ui.utils.getResponsiveSize
 
 @Composable
 fun CircleOverlay(
@@ -46,13 +47,13 @@ fun CircleOverlay(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = getResponsivePadding(16.dp)),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(20.dp)) // Calendar's offset
+            Spacer(modifier = Modifier.height(getResponsiveSize(20.dp))) // Calendar's offset
             CalendarCalories()
 
-            Spacer(modifier = Modifier.height(36.dp))
+            Spacer(modifier = Modifier.height(getResponsiveSize(36.dp)))
             CalorieSpeedometer(
                 currentCalories = 748,
                 maxCalories = 1950,

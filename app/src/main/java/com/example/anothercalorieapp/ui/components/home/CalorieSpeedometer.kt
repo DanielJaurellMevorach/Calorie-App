@@ -1,3 +1,5 @@
+package com.example.anothercalorieapp.ui.components.home
+
 import android.annotation.SuppressLint
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -19,6 +21,9 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.anothercalorieapp.ui.utils.getResponsiveFontSize
+import com.example.anothercalorieapp.ui.utils.getResponsivePadding
+import com.example.anothercalorieapp.ui.utils.getResponsiveSize
 import kotlin.math.min
 
 
@@ -32,16 +37,25 @@ fun CalorieSpeedometer(
     val progress = min(currentCalories.toFloat() / maxCalories.toFloat(), 1f)
     val density = LocalDensity.current
 
+    // Pre-calculate all responsive values outside Canvas
+    val speedometerHeight = getResponsiveSize(140.dp)
+    val strokeWidthDp = getResponsiveSize(40.dp)
+    val gapAngleValue = getResponsiveSize(20.dp).value
+    val arcTopValue = getResponsiveSize(10.dp).value
+    val canvasHeight = getResponsiveSize(90.dp)
+    val circleRadiusDp = getResponsiveSize(48.dp)
+    val offsetY = getResponsiveSize(100.dp)
+
     BoxWithConstraints(
         modifier = modifier
             .fillMaxWidth()
-            .height(140.dp) // Height for arcs + spacing
+            .height(speedometerHeight)
     ) {
         val canvasWidth = constraints.maxWidth.toFloat()
 
-        val strokeWidth = with(density) { 40.dp.toPx() }
+        val strokeWidth = with(density) { strokeWidthDp.toPx() }
         val totalSweep = 180f
-        val gapAngle = 20f
+        val gapAngle = gapAngleValue
         val segments = 3
         val segmentSweep = (totalSweep - gapAngle * (segments - 1)) / segments
         val startAngle = 180f
@@ -49,14 +63,14 @@ fun CalorieSpeedometer(
         val diameter = canvasWidth * 0.85f
 
         val arcLeft = (canvasWidth - diameter) / 2f
-        val arcTop = 10f
+        val arcTop = arcTopValue
         val arcRect = Rect(arcLeft, arcTop, arcLeft + diameter, arcTop + diameter)
 
         // These variables need to be declared outside the loop to be accessible later
         var lastFilledSegmentStartAngle = 0f
         var lastFilledSegmentSweep = 0f
 
-        Canvas(modifier = Modifier.fillMaxWidth().height(90.dp)) {
+        Canvas(modifier = Modifier.fillMaxWidth().height(canvasHeight)) {
             var angle = startAngle
             // Draw background arcs
             repeat(segments) {
@@ -109,7 +123,7 @@ fun CalorieSpeedometer(
                 val angleRad = Math.toRadians(endAngleOfFill.toDouble())
 
                 // Calculate position on arc circumference
-                val circleRadius = with(density) { 48.dp.toPx() } / 2f
+                val circleRadius = with(density) { circleRadiusDp.toPx() } / 2f
                 val circleX = centerX + radius * kotlin.math.cos(angleRad).toFloat()
                 val circleY = centerY + radius * kotlin.math.sin(angleRad).toFloat()
 
@@ -134,18 +148,18 @@ fun CalorieSpeedometer(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .fillMaxWidth()
-                .offset(y = 100.dp) // Position below arcs
+                .offset(y = offsetY)
         ) {
             Text(
                 text = "${maxCalories - currentCalories}",
-                fontSize = 28.sp,
+                fontSize = getResponsiveFontSize(28.sp),
                 color = Color.Black,
                 fontWeight = FontWeight.ExtraBold
             )
             Text(
                 text = "Sunday's remaining calories",
-                modifier = Modifier.padding(top = 16.dp),
-                fontSize = 14.sp,
+                modifier = Modifier.padding(top = getResponsivePadding(16.dp)),
+                fontSize = getResponsiveFontSize(14.sp),
                 color = Color.Gray,
                 fontWeight = FontWeight.W400,
             )

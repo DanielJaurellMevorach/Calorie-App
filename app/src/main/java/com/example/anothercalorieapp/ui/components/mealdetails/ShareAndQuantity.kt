@@ -25,6 +25,11 @@ import com.composables.icons.lucide.Lucide
 import com.composables.icons.lucide.Minus
 import com.composables.icons.lucide.Plus
 import com.composables.icons.lucide.Share
+import com.example.anothercalorieapp.ui.utils.getResponsiveCornerRadius
+import com.example.anothercalorieapp.ui.utils.getResponsiveFontSize
+import com.example.anothercalorieapp.ui.utils.getResponsiveIconSize
+import com.example.anothercalorieapp.ui.utils.getResponsivePadding
+import com.example.anothercalorieapp.ui.utils.getResponsiveSize
 
 @Composable
 fun ShareAndQuantity(
@@ -44,17 +49,17 @@ fun ShareAndQuantity(
         IconButton(
             onClick = onShareClick,
             modifier = Modifier
-                .size(52.dp) // Slightly larger touch area
+                .size(getResponsiveSize(52.dp))
                 .background(
                     Color(0xFFF5F5F5),
-                    shape = RoundedCornerShape(26.dp)
+                    shape = RoundedCornerShape(getResponsiveCornerRadius(26.dp))
                 )
         ) {
             Icon(
                 imageVector = Lucide.Share,
                 contentDescription = "Share Meal",
                 tint = Color.Black,
-                modifier = Modifier.size(22.dp)
+                modifier = Modifier.size(getResponsiveIconSize(22.dp))
             )
         }
 
@@ -63,11 +68,13 @@ fun ShareAndQuantity(
             modifier = Modifier
                 .background(
                     Color(0xFFF5F5F5),
-                    shape = RoundedCornerShape(28.dp)
+                    shape = RoundedCornerShape(getResponsiveCornerRadius(28.dp))
                 )
-                .padding(vertical = 16.dp, horizontal = 24.dp)
-                .fillMaxWidth(0.4f)
-            ,
+                .padding(
+                    vertical = getResponsivePadding(16.dp),
+                    horizontal = getResponsivePadding(24.dp)
+                )
+                .fillMaxWidth(0.4f),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -80,24 +87,24 @@ fun ShareAndQuantity(
                     }
                 },
                 modifier = Modifier
-                    .size(16.dp)
-                    .background(Color.White, shape = RoundedCornerShape(22.dp)),
+                    .size(getResponsiveSize(16.dp))
+                    .background(Color.White, shape = RoundedCornerShape(getResponsiveCornerRadius(22.dp))),
                 enabled = quantity > 1
             ) {
                 Icon(
                     imageVector = Lucide.Minus,
                     contentDescription = "Decrease Quantity",
                     tint = Color.Black,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(getResponsiveIconSize(20.dp))
                 )
             }
 
             // Quantity display
             Text(
                 text = quantity.toString(),
-                modifier = Modifier.padding(horizontal = 20.dp),
+                modifier = Modifier.padding(horizontal = getResponsivePadding(20.dp)),
                 color = Color.Black,
-                fontSize = 18.sp, // Slightly bigger for Pixel 6 screen
+                fontSize = getResponsiveFontSize(18.sp, minScale = 0.8f, maxScale = 1.0f),
                 fontWeight = FontWeight.SemiBold
             )
 
@@ -108,14 +115,14 @@ fun ShareAndQuantity(
                     onQuantityChange(quantity)
                 },
                 modifier = Modifier
-                    .size(16.dp)
-                    .background(Color.Black, shape = RoundedCornerShape(22.dp))
+                    .size(getResponsiveSize(16.dp))
+                    .background(Color.Black, shape = RoundedCornerShape(getResponsiveCornerRadius(22.dp)))
             ) {
                 Icon(
                     imageVector = Lucide.Plus,
                     contentDescription = "Increase Quantity",
                     tint = Color.White,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(getResponsiveIconSize(20.dp))
                 )
             }
         }

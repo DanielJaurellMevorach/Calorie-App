@@ -26,6 +26,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.anothercalorieapp.ui.utils.getResponsiveCornerRadius
+import com.example.anothercalorieapp.ui.utils.getResponsiveFontSize
+import com.example.anothercalorieapp.ui.utils.getResponsivePadding
+import com.example.anothercalorieapp.ui.utils.getResponsiveSize
 
 @Composable
 fun MealCard(
@@ -41,14 +45,8 @@ fun MealCard(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(72.dp)
-            .background(Color.White, RoundedCornerShape(12.dp))
-//            .border(
-//                width = 1.dp,
-//                color = Color.Black,
-//                shape = RoundedCornerShape(12.dp)
-//            )
-            //.padding(horizontal = 8.dp)
+            .height(getResponsiveSize(72.dp))
+            .background(Color.White, RoundedCornerShape(getResponsiveCornerRadius()))
     ) {
         Row(
             modifier = Modifier.fillMaxSize(),
@@ -59,17 +57,17 @@ fun MealCard(
                 painter = painterResource(id = imageRes),
                 contentDescription = "Meal Image",
                 modifier = Modifier
-                    .size(52.dp)
-                    .clip(RoundedCornerShape(8.dp)),
+                    .size(getResponsiveSize(52.dp))
+                    .clip(RoundedCornerShape(getResponsiveCornerRadius(8.dp))),
                 contentScale = ContentScale.Crop
             )
 
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(getResponsivePadding(12.dp)))
 
             // Text content
             Column(
                 modifier = Modifier
-                    .height(72.dp)
+                    .height(getResponsiveSize(72.dp))
                     .fillMaxWidth(),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
@@ -77,55 +75,54 @@ fun MealCard(
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically // aligns them together
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = mealName,
-                        fontSize = 14.sp,
+                        fontSize = getResponsiveFontSize(14.sp),
                         fontWeight = FontWeight.SemiBold,
                         color = Color.Black,
-                        modifier = Modifier.offset(y = 4.dp)
+                        modifier = Modifier.offset(y = getResponsivePadding(4.dp))
                     )
                     Box(
                         modifier = Modifier
-                            .background(Color(0xFFF0F0F0), shape = RoundedCornerShape(4.dp))
+                            .background(Color(0xFFF0F0F0), shape = RoundedCornerShape(getResponsiveCornerRadius(4.dp)))
                     ) {
                         Text(
                             text = time,
-                            fontSize = 10.sp,
+                            fontSize = getResponsiveFontSize(10.sp),
                             fontWeight = FontWeight.SemiBold,
                             color = Color.Black,
-                            modifier = Modifier.padding(horizontal = 6.dp)
+                            modifier = Modifier.padding(horizontal = getResponsivePadding(6.dp))
                         )
                     }
                 }
 
-
                 Text(
                     text = "$calories Calories",
-                    fontSize = 12.sp,
+                    fontSize = getResponsiveFontSize(12.sp),
                     fontWeight = FontWeight.Bold,
                     color = Color(0xF5000000)
                 )
 
                 Row(
-                    modifier = Modifier.offset(y = (-4).dp)
+                    modifier = Modifier.offset(y = getResponsivePadding(-4.dp))
                 ) {
                     Text(
                         text = "$carbs Carbs",
-                        fontSize = 12.sp,
+                        fontSize = getResponsiveFontSize(12.sp),
                         color = Color(0xFF888888)
                     )
-                    Text(" • ", fontSize = 10.sp, color = Color(0xFF888888))
+                    Text(" • ", fontSize = getResponsiveFontSize(10.sp), color = Color(0xFF888888))
                     Text(
                         text = "$proteins Proteins",
-                        fontSize = 12.sp,
+                        fontSize = getResponsiveFontSize(12.sp),
                         color = Color(0xFF888888)
                     )
-                    Text(" • ", fontSize = 10.sp, color = Color(0xFF888888))
+                    Text(" • ", fontSize = getResponsiveFontSize(10.sp), color = Color(0xFF888888))
                     Text(
                         text = "$fat Fat",
-                        fontSize = 12.sp,
+                        fontSize = getResponsiveFontSize(12.sp),
                         color = Color(0xFF888888)
                     )
                 }
@@ -133,5 +130,3 @@ fun MealCard(
         }
     }
 }
-
-
