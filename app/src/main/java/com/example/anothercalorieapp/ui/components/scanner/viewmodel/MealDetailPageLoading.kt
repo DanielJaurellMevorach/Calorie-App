@@ -1,15 +1,31 @@
-package com.example.anothercalorieapp.ui.components.home
+package com.example.anothercalorieapp.ui.components.scanner.viewmodel
 
 import android.annotation.SuppressLint
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -20,12 +36,13 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.composables.icons.lucide.*
-import com.example.anothercalorieapp.ui.components.scanner.viewmodel.ShimmerHealthScore
-import com.example.anothercalorieapp.ui.components.scanner.viewmodel.ShimmerIngredientCard
-import com.example.anothercalorieapp.ui.components.scanner.viewmodel.ShimmerMealName
-import com.example.anothercalorieapp.ui.components.scanner.viewmodel.ShimmerNutrientCard
-import com.example.anothercalorieapp.ui.components.scanner.viewmodel.ShimmerShareAndQuantity
+import com.composables.icons.lucide.Beef
+import com.composables.icons.lucide.ChevronLeft
+import com.composables.icons.lucide.Droplets
+import com.composables.icons.lucide.Flame
+import com.composables.icons.lucide.Lucide
+import com.composables.icons.lucide.Trash2
+import com.composables.icons.lucide.Wheat
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable

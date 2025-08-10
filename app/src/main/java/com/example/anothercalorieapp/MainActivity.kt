@@ -9,8 +9,6 @@ import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -20,10 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -32,10 +27,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import coil.compose.AsyncImage
 import com.android.example.cameraxapp.CameraScreen
 import com.example.anothercalorieapp.ui.components.home.MealDetailPage
-import com.example.anothercalorieapp.ui.components.home.MealDetailPageLoading
+import com.example.anothercalorieapp.ui.components.scanner.viewmodel.MealDetailPageLoading
 import com.example.anothercalorieapp.ui.components.scanner.viewmodel.MealDetailsUiState
 import com.example.anothercalorieapp.ui.components.scanner.viewmodel.MealDetailsViewModel
 import com.example.anothercalorieapp.ui.theme.AnotherCalorieAppTheme
