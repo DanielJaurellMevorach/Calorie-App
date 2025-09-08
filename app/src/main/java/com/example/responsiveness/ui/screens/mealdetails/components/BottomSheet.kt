@@ -64,6 +64,10 @@ import com.example.anothercalorieapp.ui.components.mealdetails.IngredientCard
 import com.example.anothercalorieapp.ui.components.mealdetails.ShareAndQuantity
 import com.example.anothercalorieapp.ui.components.scanner.viewmodel.MealApiResponse
 import com.example.responsiveness.ui.theme.DesignTokens
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.ui.unit.Dp
 
 @OptIn(ExperimentalFoundationApi::class)
 @SuppressLint("UnusedBoxWithConstraintsScope")
@@ -83,7 +87,9 @@ fun CustomBottomSheet(
     onSubmitCorrection: () -> Unit,
     onFixClick: () -> Unit,
     onCancelFix: () -> Unit,
-    isLoading: Boolean
+    isLoading: Boolean,
+    // Optional override: if provided the bottom sheet will clamp its max height to this value
+    maxSheetHeightOverride: Dp? = null
 ) {
     // Helper to format nutrient values to max one decimal place
     fun formatNutrient(value: Double?): String {
@@ -102,7 +108,8 @@ fun CustomBottomSheet(
         val keyboardController = LocalSoftwareKeyboardController.current
 
         val minSheetHeight = tokens.sDp(88.dp)
-        val maxSheetHeight = fullHeight * 0.925f
+        // Use the override when provided, otherwise fallback to previous behavior
+        val maxSheetHeight = maxSheetHeightOverride ?: (fullHeight * 0.925f)
         val sheetInitialHeight = tokens.sDp(200.dp)
 
         var sheetHeight by remember { mutableStateOf(sheetInitialHeight) }
