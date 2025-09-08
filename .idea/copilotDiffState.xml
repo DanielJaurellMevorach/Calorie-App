@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CopilotDiffPersistence">
+    <option name="pendingDiffs">
+      <map>
+        <entry key="$PROJECT_DIR$/app/src/main/res/values/strings.xml">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/app/src/main/res/values/strings.xml" />
+              <option name="originalContent" value="&lt;resources&gt;&#10;    &lt;string name=&quot;app_name&quot;&gt;Another Calorie App&lt;/string&gt;&#10;&lt;/resources&gt;" />
+              <option name="updatedContent" value="&lt;resources&gt;&#10;    &lt;string name=&quot;app_name&quot;&gt;Another Calorie App&lt;/string&gt;&#10;&lt;/resources&gt;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>
