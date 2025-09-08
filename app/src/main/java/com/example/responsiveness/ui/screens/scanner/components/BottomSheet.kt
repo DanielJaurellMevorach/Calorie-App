@@ -116,15 +116,24 @@ fun CustomBottomSheet(
                     modifier = Modifier
                         .matchParentSize()
                         .clip(RoundedCornerShape(topStart = tokens.sDp(40.dp), topEnd = tokens.sDp(40.dp)))
-                        .background(Color.White)
-                        .padding(tokens.innerPadding),
+                        .background(Color.White),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     // Handle bar (copied from MealDetailPageLoading)
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(tokens.sDp(40.dp)),
+                            .height(tokens.sDp(40.dp))
+                            .pointerInput(Unit) {
+                                detectDragGestures { change, dragAmount ->
+                                    change.consume()
+                                    scope.launch {
+                                        val newHeight = (sheetHeight.value - dragAmount.y)
+                                            .coerceIn(minHeightPx, maxHeightPx)
+                                        sheetHeight.snapTo(newHeight)
+                                    }
+                                }
+                            },
                         contentAlignment = Alignment.Center
                     ) {
                         Spacer(
@@ -135,77 +144,85 @@ fun CustomBottomSheet(
                         )
                     }
 
-                    // Camera control row
-                    Row(
-                        Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                    // Content below handle - apply inner padding here so top padding matches meal details
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(tokens.innerPadding),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        IconButton(
-                            onClick = onSwitchCamera,
-                            modifier = Modifier.size(tokens.cameraControlButtonSize)
+                        // Camera control row
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                Lucide.SwitchCamera,
-                                contentDescription = "Switch Camera",
-                                modifier = Modifier.size(tokens.cameraIconSize),
-                                tint = Color.Black
-                            )
+                            IconButton(
+                                onClick = onSwitchCamera,
+                                modifier = Modifier.size(tokens.cameraControlButtonSize)
+                            ) {
+                                Icon(
+                                    Lucide.SwitchCamera,
+                                    contentDescription = "Switch Camera",
+                                    modifier = Modifier.size(tokens.cameraIconSize),
+                                    tint = Color.Black
+                                )
+                            }
+                            FloatingActionButton(
+                                onClick = onCapture,
+                                modifier = Modifier.size(tokens.cameraCaptureButtonSize),
+                                shape = CircleShape,
+                                containerColor = Color.Black,
+                                contentColor = Color.White
+                            ) {
+                                Icon(
+                                    Lucide.Camera,
+                                    contentDescription = "Take Photo",
+                                    modifier = Modifier.size(tokens.cameraCaptureIconSize),
+                                    tint = Color.White
+                                )
+                            }
+                            IconButton(
+                                onClick = onToggleFlash,
+                                modifier = Modifier.size(tokens.cameraControlButtonSize)
+                            ) {
+                                Icon(
+                                    if (isFlashOn) Lucide.ZapOff else Lucide.Zap,
+                                    contentDescription = if (isFlashOn) "Turn Flash Off" else "Turn Flash On",
+                                    modifier = Modifier.size(tokens.cameraIconSize),
+                                    tint = Color.Black
+                                )
+                            }
                         }
-                        FloatingActionButton(
-                            onClick = onCapture,
-                            modifier = Modifier.size(tokens.cameraCaptureButtonSize),
-                            shape = CircleShape,
-                            containerColor = Color.Black,
-                            contentColor = Color.White
+                        Spacer(modifier = Modifier.height(tokens.sDp(16.dp)))
+                        // Instructions title
+                        Text(
+                            text = "Camera Instructions",
+                            style = TextStyle(
+                                fontSize = tokens.cameraInstructionsTitleFontSize,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black,
+                                textAlign = TextAlign.Center
+                            ),
+                            modifier = Modifier.fillMaxWidth().padding(bottom = tokens.cameraInstructionsItemSpacing)
+                        )
+                        // Scrollable instructions
+                        LazyColumn(
+                            modifier = Modifier.fillMaxWidth().weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(tokens.cameraInstructionsItemSpacing)
                         ) {
-                            Icon(
-                                Lucide.Camera,
-                                contentDescription = "Take Photo",
-                                modifier = Modifier.size(tokens.cameraCaptureIconSize),
-                                tint = Color.White
-                            )
-                        }
-                        IconButton(
-                            onClick = onToggleFlash,
-                            modifier = Modifier.size(tokens.cameraControlButtonSize)
-                        ) {
-                            Icon(
-                                if (isFlashOn) Lucide.ZapOff else Lucide.Zap,
-                                contentDescription = if (isFlashOn) "Turn Flash Off" else "Turn Flash On",
-                                modifier = Modifier.size(tokens.cameraIconSize),
-                                tint = Color.Black
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(tokens.sDp(16.dp)))
-                    // Instructions title
-                    Text(
-                        text = "Camera Instructions",
-                        style = TextStyle(
-                            fontSize = tokens.cameraInstructionsTitleFontSize,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black,
-                            textAlign = TextAlign.Center
-                        ),
-                        modifier = Modifier.fillMaxWidth().padding(bottom = tokens.cameraInstructionsItemSpacing)
-                    )
-                    // Scrollable instructions
-                    LazyColumn(
-                        modifier = Modifier.fillMaxWidth().weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(tokens.cameraInstructionsItemSpacing)
-                    ) {
-                        items(instructions) { instruction ->
-                            Text(
-                                text = "• $instruction",
-                                style = TextStyle(
-                                    fontSize = tokens.cameraInstructionsFontSize,
-                                    lineHeight = tokens.cameraInstructionsLineHeight,
-                                    color = Color.Black.copy(alpha = 0.85f),
-                                    textAlign = TextAlign.Start
-                                ),
-                                modifier = Modifier.fillMaxWidth()
-                            )
+                            items(instructions) { instruction ->
+                                Text(
+                                    text = "• $instruction",
+                                    style = TextStyle(
+                                        fontSize = tokens.cameraInstructionsFontSize,
+                                        lineHeight = tokens.cameraInstructionsLineHeight,
+                                        color = Color.Black.copy(alpha = 0.85f),
+                                        textAlign = TextAlign.Start
+                                    ),
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
                         }
                     }
                 }

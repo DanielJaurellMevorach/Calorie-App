@@ -138,11 +138,11 @@ fun ScannerScreen(
 
     val instructions = listOf(
         "Keep the meal you wish to register in the focusing frame",
-        "Only maintain the meal to be scanned in the frame",
         "Hold the device steady when capturing",
         "Use the flash button to toggle torch on/off",
         "Switch between front and rear cameras",
-        "If issues persist, change lighting conditions"
+        "If issues persist, change lighting conditions",
+        "If meal analysis isn't accurate, prompt correction with explanation"
     )
 
     CompositionLocalProvider(
