@@ -1,6 +1,5 @@
 package com.example.responsiveness.ui.screens.home
 
-import CalendarCalories
 import android.annotation.SuppressLint
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.LocalOverscrollFactory
@@ -37,11 +36,9 @@ import com.example.anothercalorieapp.ui.components.home.NutrientMeter
 import com.example.responsiveness.ui.components.general.rememberSafeContentPadding
 import com.example.responsiveness.ui.screens.home.components.CalorieSpeedometer
 import com.example.responsiveness.ui.screens.home.components.TimeOfDaySummary
+import com.example.responsiveness.ui.screens.home.components.CalendarCalories
 import com.example.responsiveness.ui.screens.home.viewmodel.HomeViewModel
 import com.example.responsiveness.ui.theme.DesignTokens
-import java.time.LocalDate
-import java.time.format.TextStyle
-import java.util.Locale
 
 @OptIn(ExperimentalFoundationApi::class)
 @SuppressLint("UnusedBoxWithConstraintsScope")
@@ -57,18 +54,11 @@ fun HomeScreen(
     ) {
         val tokens = DesignTokens.provideTokens(availableWidth = maxWidth, availableHeight = maxHeight)
 
-        val uiState by viewModel.uiState.collectAsState()
-        val calendarCaloriesByDate by viewModel.calendarCaloriesByDate.collectAsState()
-        val todayCalories by viewModel.todayCalories.collectAsState()
-        val todayProtein by viewModel.todayProtein.collectAsState()
-        val todayCarbs by viewModel.todayCarbs.collectAsState()
-        val todayFat by viewModel.todayFat.collectAsState()
-        val maxCalories by viewModel.maxCalories.collectAsState()
-        val maxProtein by viewModel.maxProtein.collectAsState()
-        val maxCarbs by viewModel.maxCarbs.collectAsState()
-        val maxFat by viewModel.maxFat.collectAsState()
+        // Single state collection - all logic moved to ViewModel
+        val homeState by viewModel.homeState.collectAsState()
+        val uiState = homeState.uiState
 
-        // Get proper content padding that accounts for the status bar and floating navigation bar.
+        // Get proper content padding that accounts for the status bar and floating navigation bar
         val safePadding = rememberSafeContentPadding(
             includeStatusBar = true,
             includeNavigationBar = true,
@@ -82,24 +72,14 @@ fun HomeScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(safePadding) // Use the calculated safe padding directly
-                    .padding(horizontal = tokens.outerInset), // Apply horizontal padding separately
+                    .padding(safePadding)
+                    .padding(horizontal = tokens.outerInset),
                 verticalArrangement = Arrangement.spacedBy(tokens.sDp(8.dp), Alignment.Top),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                val daysCount = 7
-                val today = LocalDate.now()
-                val dayNames = MutableList(daysCount) { "" }
-                val dayNumbers = MutableList(daysCount) { "" }
-                val calories = MutableList(daysCount) { "0" }
-                for (i in 0 until daysCount) {
-                    val date = today.minusDays((daysCount - 1 - i).toLong())
-                    dayNames[i] = date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault())
-                    dayNumbers[i] = date.dayOfMonth.toString()
-                    calories[i] = calendarCaloriesByDate[date] ?: "0"
-                }
+                // Calendar component - data prepared in ViewModel
                 CalendarCalories(
-                    calendarCaloriesByDate = calendarCaloriesByDate,
+                    calendarData = homeState.calendarData,
                     tokens = tokens,
                     analytics = false,
                     modifier = Modifier
@@ -107,23 +87,21 @@ fun HomeScreen(
                         .padding(horizontal = tokens.sDp(8.dp))
                 )
 
-                Spacer(
-                    modifier = Modifier.height(tokens.sDp(4.dp))
-                )
+                Spacer(modifier = Modifier.height(tokens.sDp(4.dp)))
 
+                // Calorie speedometer - values from ViewModel
                 CalorieSpeedometer(
-                    currentCalories = todayCalories,
-                    maxCalories = maxCalories,
+                    currentCalories = homeState.todayCalories,
+                    maxCalories = homeState.maxCalories,
                     tokens = tokens,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = tokens.sDp(8.dp))
                 )
 
-                Spacer(
-                    modifier = Modifier.height(tokens.sDp(4.dp))
-                )
+                Spacer(modifier = Modifier.height(tokens.sDp(4.dp)))
 
+                // Nutrient meters - all values from ViewModel
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -133,8 +111,8 @@ fun HomeScreen(
                 ) {
                     NutrientMeter(
                         nutrient = "Protein",
-                        currentValue = todayProtein,
-                        maxValue = maxProtein,
+                        currentValue = homeState.todayProtein,
+                        maxValue = homeState.maxProtein,
                         tokens = tokens,
                         color = Color.Black,
                         icon = Lucide.Beef,
@@ -143,8 +121,8 @@ fun HomeScreen(
                     Spacer(modifier = Modifier.width(tokens.sDp(8.dp)))
                     NutrientMeter(
                         nutrient = "Carbs",
-                        currentValue = todayCarbs,
-                        maxValue = maxCarbs,
+                        currentValue = homeState.todayCarbs,
+                        maxValue = homeState.maxCarbs,
                         tokens = tokens,
                         color = Color.Black,
                         icon = Lucide.Wheat,
@@ -153,8 +131,8 @@ fun HomeScreen(
                     Spacer(modifier = Modifier.width(tokens.sDp(8.dp)))
                     NutrientMeter(
                         nutrient = "Fats",
-                        currentValue = todayFat,
-                        maxValue = maxFat,
+                        currentValue = homeState.todayFat,
+                        maxValue = homeState.maxFat,
                         tokens = tokens,
                         color = Color.Black,
                         icon = Lucide.Droplets,
@@ -164,6 +142,7 @@ fun HomeScreen(
 
                 Spacer(modifier = Modifier.height(tokens.sDp(8.dp)))
 
+                // Time of day summaries - data processed in ViewModel
                 TimeOfDaySummary(
                     mealName = "Morning",
                     calories = uiState.morning.calories.toString(),

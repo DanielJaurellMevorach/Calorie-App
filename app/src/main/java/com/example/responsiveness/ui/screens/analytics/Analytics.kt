@@ -1,6 +1,5 @@
 package com.example.responsiveness.ui.screens.analytics
 
-import CalendarCalories
 import android.annotation.SuppressLint
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.EaseInOut
@@ -44,13 +43,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.Saver
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -71,13 +65,11 @@ import androidx.navigation.NavController
 import com.example.responsiveness.DatabaseMealDetailRoute
 import com.example.responsiveness.ui.components.general.rememberSafeContentPadding
 import com.example.responsiveness.ui.screens.analytics.viewmodel.AnalyticsViewModel
+import com.example.responsiveness.ui.screens.home.components.CalendarCalories
 import com.example.responsiveness.ui.theme.DesignTokens
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil.CoilImage
-import java.time.LocalDate
-import java.time.LocalTime
 import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedBoxWithConstraintsScope")
@@ -102,70 +94,15 @@ fun Analytics(
             }
     ) {
         val tokens = DesignTokens.provideTokens(availableWidth = maxWidth, availableHeight = maxHeight)
-        val calendarCaloriesByDate by viewModel.calendarCaloriesByDate.collectAsState()
-        val allMeals by viewModel.allMeals.collectAsState()
 
-        // Get proper content padding that accounts for the status bar and floating navigation bar.
+        // Single state collection - all logic moved to ViewModel
+        val analyticsState by viewModel.uiState.collectAsState()
+        val calendarCaloriesByDate by viewModel.calendarCaloriesByDate.collectAsState()
         val safePadding = rememberSafeContentPadding(
             includeStatusBar = true,
             includeNavigationBar = true,
             additionalBottomPadding = tokens.navContainerHeight + tokens.navHorizontalPadding * 2 + tokens.sDp(16.dp)
         )
-
-        data class FilterState(val selectedFilter: String?, val date: LocalDate?, val searchText: String)
-        val today = LocalDate.now()
-        // Use a single source of truth for filter state, and only set default on first launch
-        val filterState = rememberSaveable(stateSaver = Saver(
-            save = { listOf(it.selectedFilter, it.date?.toString(), it.searchText) },
-            restore = {
-                val list = it as List<*>
-                val filter = list[0] as String?
-                val dateStr = list[1] as String?
-                val searchText = list[2] as String
-                FilterState(filter, dateStr?.let { LocalDate.parse(it) }, searchText)
-            }
-        )) { mutableStateOf(FilterState("Today", today, "")) }
-
-        var localSearchText by remember(filterState.value.searchText) { mutableStateOf(filterState.value.searchText) }
-
-        // Remove lastSelectedDay and lastSelectedFilter, rely only on filterState
-
-        val highlightedDates by remember(filterState.value) {
-            derivedStateOf {
-                when (filterState.value.selectedFilter) {
-                    "Last 7 Days" -> List(7) { today.minusDays(it.toLong()) }
-                    "Last 30 Days" -> List(30) { today.minusDays(it.toLong()) }
-                    "Today" -> listOf(today)
-                    null -> filterState.value.date?.let { listOf(it) } ?: emptyList() // Only highlight if a date is selected
-                    else -> filterState.value.date?.let { listOf(it) } ?: emptyList()
-                }
-            }
-        }
-        // Only scroll to date if the filter is "Today" and the date is today, otherwise null
-        val scrollToDate by remember(filterState.value) {
-            derivedStateOf {
-                if (filterState.value.selectedFilter == "Today" && filterState.value.date == today) today else null
-            }
-        }
-
-        // --- Week change logic ---
-        fun handleWeekChanged(visibleDates: List<LocalDate>) {
-            val containsToday = visibleDates.contains(today)
-            val selected = filterState.value
-            if (!containsToday) {
-                // If today is not visible, untoggle filter, but keep selected date if set
-                if (selected.selectedFilter != null) {
-                    filterState.value = selected.copy(selectedFilter = null, date = selected.date, searchText = "")
-                }
-            } else {
-                // If filter was Today and today is visible, keep it
-                if (selected.selectedFilter == "Today") {
-                    filterState.value = FilterState("Today", today, "")
-                } else if (selected.date != null && visibleDates.contains(selected.date)) {
-                    filterState.value = FilterState(null, selected.date, "")
-                }
-            }
-        }
 
         CompositionLocalProvider(
             LocalOverscrollFactory provides null
@@ -174,10 +111,11 @@ fun Analytics(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(safePadding) // Use the calculated safe padding directly
-                    .padding(horizontal = tokens.outerInset), // Apply horizontal padding separately
+                    .padding(safePadding)
+                    .padding(horizontal = tokens.outerInset),
                 verticalArrangement = Arrangement.spacedBy(tokens.sDp(8.dp))
             ) {
+                // Calendar component - data and interactions handled by ViewModel
                 CalendarCalories(
                     calendarCaloriesByDate = calendarCaloriesByDate,
                     tokens = tokens,
@@ -185,104 +123,52 @@ fun Analytics(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = tokens.sDp(8.dp)),
-                    onDateSelected = { date: LocalDate ->
-                        if (date == today) {
-                            filterState.value = FilterState("Today", today, "")
-                        } else {
-                            filterState.value = FilterState(null, date, "")
-                        }
+                    onDateSelected = viewModel::onDateSelected,
+                    selectedDate = analyticsState.filterState.selectedDate,
+                    highlightedDates = analyticsState.highlightedDates,
+                    scrollToDate = analyticsState.scrollToDate,
+                    onWeekChanged = viewModel::onWeekChanged,
+                    onPreviousWeek = {
+                        val current = analyticsState.scrollToDate ?: java.time.LocalDate.now()
+                        val newDate = current.minusDays(7)
+                        viewModel.onDateSelected(newDate)
                     },
-                    selectedDate = filterState.value.date,
-                    highlightedDates = highlightedDates,
-                    scrollToDate = scrollToDate,
-                    onWeekChanged = { visibleDates ->
-                        handleWeekChanged(visibleDates)
+                    onNextWeek = {
+                        val current = analyticsState.scrollToDate ?: java.time.LocalDate.now()
+                        val newDate = current.plusDays(7)
+                        viewModel.onDateSelected(newDate)
                     }
                 )
 
-                Spacer(
-                    modifier = Modifier.height(tokens.sDp(4.dp))
-                )
+                Spacer(modifier = Modifier.height(tokens.sDp(4.dp)))
 
+                // Search bar - state managed by ViewModel
                 SearchBar(
                     tokens = tokens,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = tokens.sDp(8.dp)),
-                    searchText = localSearchText,
-                    onSearchTextChange = { newText ->
-                        localSearchText = newText
-                    },
-                    onSearchAction = {
-                        filterState.value = filterState.value.copy(
-                            searchText = localSearchText,
-                            selectedFilter = if (localSearchText.isNotEmpty()) null else filterState.value.selectedFilter
-                        )
-                        focusManager.clearFocus()
-                        keyboardController?.hide()
-                    }
+                    searchText = analyticsState.localSearchText,
+                    onSearchTextChange = viewModel::onSearchTextChanged,
+                    onSearchAction = { viewModel.onSearchAction(analyticsState.localSearchText) }
                 )
 
-                Spacer(
-                    modifier = Modifier.height(tokens.sDp(8.dp))
-                )
+                Spacer(modifier = Modifier.height(tokens.sDp(8.dp)))
 
+                // Filter toggles - state managed by ViewModel
                 ToggleButtonRow(
                     tokens = tokens,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = tokens.sDp(8.dp)),
-                    selectedFilter = filterState.value.selectedFilter,
-                    onFilterToggled = { filter ->
-                        filterState.value = if (filterState.value.selectedFilter == filter) {
-                            // If clicking the same filter, deselect it (go to "All" mode)
-                            FilterState(null, null, "")
-                        } else {
-                            // Select the new filter
-                            val newDate = if (filter == "Today") today else null
-                            FilterState(filter, newDate, "")
-                        }
-                    }
+                    selectedFilter = analyticsState.filterState.selectedFilter,
+                    onFilterToggled = viewModel::onFilterToggled
                 )
 
-                Spacer(
-                    modifier = Modifier.height(tokens.sDp(8.dp))
-                )
+                Spacer(modifier = Modifier.height(tokens.sDp(8.dp)))
 
-                val filteredMeals = allMeals.filter { mealWithDetails ->
-                    val mealDate = java.time.Instant.ofEpochMilli(mealWithDetails.meal.created_at)
-                        .atZone(java.time.ZoneId.systemDefault())
-                        .toLocalDate()
-
-                    // First check if there's a search text (custom filter)
-                    if (filterState.value.searchText.isNotEmpty()) {
-                        return@filter mealWithDetails.meal.meal_name.contains(filterState.value.searchText, ignoreCase = true)
-                    }
-
-                    // Then check the selected filter
-                    when (filterState.value.selectedFilter) {
-                        "Today" -> mealDate == today
-                        "Last 7 Days" -> {
-                            val sevenDaysAgo = today.minusDays(6)
-                            mealDate in sevenDaysAgo..today
-                        }
-                        "Last 30 Days" -> {
-                            val thirtyDaysAgo = today.minusDays(30)
-                            mealDate in thirtyDaysAgo..today
-                        }
-                        null -> {
-                            // No filter selected - check if there's a specific date selected
-                            if (filterState.value.date != null) {
-                                mealDate == filterState.value.date
-                            } else {
-                                true // Show all meals
-                            }
-                        }
-                        else -> true
-                    }
-                }
-
-                filteredMeals.forEachIndexed { idx, mealWithDetails ->
+                // Meal list - filtered data from ViewModel
+                analyticsState.filteredMeals.forEachIndexed { idx, mealWithDetails ->
                     val mealName = mealWithDetails.meal.meal_name
                     val date = java.time.Instant.ofEpochMilli(mealWithDetails.meal.created_at)
                         .atZone(java.time.ZoneId.systemDefault())
@@ -290,13 +176,14 @@ fun Analytics(
                         .format(DateTimeFormatter.ofPattern("MMM d, yyyy - h:mm a"))
                     val calories = (mealWithDetails.nutrition?.energy_kcal ?: 0.0) * mealWithDetails.meal.quantity
                     val imagePath = mealWithDetails.meal.image_path
+
                     MealDisplay(
                         tokens = tokens,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = tokens.sDp(8.dp)),
                         mealName = mealName,
-                        date = date,
+                        date = viewModel.formatDateWithWeekday(date), // Use ViewModel method
                         calories = calories.toInt().toString(),
                         imageEmoji = imagePath ?: "\uD83E\uDD57",
                         imagePath = imagePath,
@@ -305,7 +192,7 @@ fun Analytics(
                             navController.navigate(DatabaseMealDetailRoute(mealWithDetails.meal.id, source = "analytics"))
                         }
                     )
-                    if (idx < filteredMeals.size - 1) {
+                    if (idx < analyticsState.filteredMeals.size - 1) {
                         Spacer(modifier = Modifier.height(tokens.sDp(8.dp)))
                     }
                 }
@@ -325,7 +212,7 @@ fun SearchBar(
 ) {
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
-    val sSp = tokens.sSp
+
     TextField(
         value = searchText,
         onValueChange = onSearchTextChange,
@@ -336,7 +223,6 @@ fun SearchBar(
         placeholder = {
             Text(
                 text = "Search meals",
-                //fontSize = sSp(14.sp),
                 fontSize = tokens.calendarTextSize.times(1.2),
                 color = Color(0xFF8A8A8A),
                 fontWeight = FontWeight.Normal
@@ -351,7 +237,7 @@ fun SearchBar(
             )
         },
         textStyle = TextStyle(
-            fontSize = sSp(14.sp),
+            fontSize = tokens.sSp(14.sp),
             color = Color(0xFF1A1A1A)
         ),
         shape = CircleShape,
@@ -390,8 +276,6 @@ fun ToggleButtonRow(
     val items = listOf("Today", "Last 7 Days", "Last 30 Days")
     val listState = rememberLazyListState()
     val selectedIndex = items.indexOf(selectedFilter)
-    val sDp = tokens.sDp
-    val sSp = tokens.sSp
 
     LaunchedEffect(selectedIndex) {
         if (selectedIndex >= 0) {
@@ -402,14 +286,13 @@ fun ToggleButtonRow(
     LazyRow(
         state = listState,
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(sDp(8.dp), Alignment.CenterHorizontally),
+        horizontalArrangement = Arrangement.spacedBy(tokens.sDp(8.dp), Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically
     ) {
         items(items.size) { index ->
             val text = items[index]
             val isSelected = selectedFilter == text
 
-            // Animate the background color with fade effect
             val backgroundColor by animateColorAsState(
                 targetValue = if (isSelected) Color.Black else Color.White,
                 animationSpec = tween(
@@ -419,7 +302,6 @@ fun ToggleButtonRow(
                 label = "background_color_animation"
             )
 
-            // Animate the text color
             val textColor by animateColorAsState(
                 targetValue = if (isSelected) Color.White else Color.Black,
                 animationSpec = tween(
@@ -444,12 +326,10 @@ fun ToggleButtonRow(
                     },
                 contentAlignment = Alignment.Center
             ) {
-                // Use a Box with fixed dimensions to prevent layout shifts
                 Box(
-                    modifier = Modifier.padding(horizontal = sDp(16.dp)),
+                    modifier = Modifier.padding(horizontal = tokens.sDp(16.dp)),
                     contentAlignment = Alignment.Center
                 ) {
-                    // Invisible text with bold weight to reserve space
                     Text(
                         text = text,
                         color = Color.Transparent,
@@ -457,7 +337,6 @@ fun ToggleButtonRow(
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 1
                     )
-                    // Visible text with animated properties
                     Text(
                         text = text,
                         color = textColor,
@@ -504,7 +383,7 @@ fun MealDisplay(
         ) {
             val imageSize = tokens.sDp(56.dp)
             val imageShape = RoundedCornerShape(
-                topStart = tokens.sDp(28.dp), // large rounding for left corners
+                topStart = tokens.sDp(28.dp),
                 bottomStart = tokens.sDp(28.dp),
                 topEnd = tokens.sDp(28.dp),
                 bottomEnd = tokens.sDp(28.dp)
@@ -543,6 +422,7 @@ fun MealDisplay(
                     )
                 }
             }
+
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(tokens.sDp(2.dp))
@@ -557,7 +437,7 @@ fun MealDisplay(
                 )
 
                 Text(
-                    text = formatDateWithWeekday(date),
+                    text = date,
                     color = Color(0xFF6B7280),
                     fontSize = tokens.sSp(10.sp),
                     fontWeight = FontWeight.Medium,
@@ -565,6 +445,7 @@ fun MealDisplay(
                     overflow = TextOverflow.Ellipsis
                 )
             }
+
             Box(
                 modifier = Modifier
                     .padding(horizontal = tokens.sDp(8.dp), vertical = tokens.sDp(4.dp))
@@ -583,9 +464,7 @@ fun MealDisplay(
                             fontWeight = FontWeight.Bold
                         )
                     )
-                    Spacer(
-                        modifier = Modifier.height(tokens.sDp(4.dp))
-                    )
+                    Spacer(modifier = Modifier.height(tokens.sDp(4.dp)))
                     BasicText(
                         text = "kcal",
                         modifier = Modifier.padding(bottom = tokens.sDp(2.dp), top = tokens.sDp(1.dp)),
@@ -598,36 +477,5 @@ fun MealDisplay(
                 }
             }
         }
-    }
-}
-
-private fun formatDateWithWeekday(dateString: String): String {
-    return try {
-        val parts = dateString.split(" - ")
-        if (parts.size == 2) {
-            val datePart = parts[0].trim()
-            val timePart = parts[1].trim()
-
-            val inputDateFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.getDefault())
-            val parsedDate = LocalDate.parse(datePart, inputDateFormatter)
-
-            val weekday = parsedDate.dayOfWeek.getDisplayName(
-                java.time.format.TextStyle.SHORT,
-                Locale.getDefault()
-            )
-            val dateNoYearFormatter = DateTimeFormatter.ofPattern("MMM d", Locale.getDefault())
-            val dateNoYear = parsedDate.format(dateNoYearFormatter)
-
-            val timeFormatter12 = DateTimeFormatter.ofPattern("h:mm a", Locale.getDefault())
-            val localTime = LocalTime.parse(timePart, timeFormatter12)
-            val timeFormatter24 = DateTimeFormatter.ofPattern("HH:mm", Locale.getDefault())
-            val time24 = localTime.format(timeFormatter24)
-
-            "$weekday, $dateNoYear - $time24"
-        } else {
-            dateString
-        }
-    } catch (e: Exception) {
-        dateString
     }
 }

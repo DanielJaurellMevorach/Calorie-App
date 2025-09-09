@@ -5,8 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.responsiveness.database.dao.MealDao
 
 /**
- * Factory for AnalyticsViewModel. Use with ViewModelProvider when AnalyticsViewModel requires constructor parameters.
- * Consider using dependency injection for better testability.
+ * Factory for creating AnalyticsViewModel instances with proper dependency injection
  */
 class AnalyticsViewModelFactory(private val mealDao: MealDao) : ViewModelProvider.Factory {
     /**

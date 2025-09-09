@@ -5,13 +5,9 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.responsiveness.database.dao.MealDao
 
 /**
- * Factory for HomeViewModel. Use with ViewModelProvider when HomeViewModel requires constructor parameters.
- * Consider using dependency injection for better testability.
+ * Factory for creating HomeViewModel instances with proper dependency injection
  */
 class HomeViewModelFactory(private val mealDao: MealDao) : ViewModelProvider.Factory {
-    /**
-     * Creates a new instance of HomeViewModel.
-     */
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(HomeViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
