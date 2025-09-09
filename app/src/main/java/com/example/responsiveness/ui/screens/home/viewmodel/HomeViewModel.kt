@@ -1,8 +1,10 @@
 package com.example.responsiveness.ui.screens.home.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.anothercalorieapp.database.MealWithDetails
+import com.example.anothercalorieapp.database.UserEntity
 import com.example.responsiveness.database.dao.MealDao
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -10,7 +12,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import java.time.Instant
@@ -58,12 +59,10 @@ data class HomeState(
 )
 
 /**
- * ViewModel for Home screen following MVVM conventions.
- * Handles all business logic, data transformations, and state management.
+ * ViewModel for Home screen. Observes meals and user preferences (users table) and emits HomeState
  */
 class HomeViewModel(private val mealDao: MealDao) : ViewModel() {
 
-    // Private mutable state
     private val _homeState = MutableStateFlow(HomeState())
     val homeState: StateFlow<HomeState> = _homeState.asStateFlow()
 
@@ -113,29 +112,36 @@ class HomeViewModel(private val mealDao: MealDao) : ViewModel() {
     }.distinctUntilChanged()
 
     init {
-        observeData()
+        observeAllData()
     }
 
     /**
-     * Observes data changes and updates the home state accordingly
+     * Observes all data sources (meals, date, user preferences) and updates the home state.
      */
-    private fun observeData() {
+    private fun observeAllData() {
         viewModelScope.launch {
-            combine(
-                mealDao.getAllMealsWithDetails(),
-                dateFlow
-            ) { allMeals, currentDate ->
-                processData(allMeals, currentDate)
-            }.collect { newState ->
-                _homeState.value = newState
-                // Update legacy states for backward compatibility
-                updateLegacyStates(newState)
+            try {
+                combine(
+                    mealDao.getAllMealsWithDetails(),
+                    dateFlow,
+                    mealDao.getUser() // Observe the user preferences flow
+                ) { allMeals, currentDate, userEntity ->
+                    // This block is executed whenever any of the flows emit a new value.
+                    processData(allMeals, currentDate, userEntity)
+                }.collect { newState ->
+                    _homeState.value = newState
+                    updateLegacyStates(newState)
+                    Log.d("HomeViewModel", "Collected new HomeState -> maxCalories=${newState.maxCalories}, maxProtein=${newState.maxProtein}, maxCarbs=${newState.maxCarbs}, maxFat=${newState.maxFat}")
+                }
+            } catch (e: Exception) {
+                Log.e("HomeViewModel", "Error observing data: ${e.message}")
+                _homeState.value = _homeState.value.copy(isLoading = false, errorMessage = "Failed to load data.")
             }
         }
     }
 
     /**
-     * Updates legacy state flows for backward compatibility
+     * Updates legacy state flows for backward compatibility.
      */
     private fun updateLegacyStates(homeState: HomeState) {
         _uiState.value = homeState.uiState
@@ -151,54 +157,40 @@ class HomeViewModel(private val mealDao: MealDao) : ViewModel() {
     }
 
     /**
-     * Processes meal data and creates the home state
+     * Processes all data sources and returns a new HomeState.
      */
-    private suspend fun processData(allMeals: List<MealWithDetails>, currentDate: LocalDate): HomeState {
-        try {
-            _homeState.value = _homeState.value.copy(isLoading = true, errorMessage = null)
+    private fun processData(
+        allMeals: List<MealWithDetails>,
+        currentDate: LocalDate,
+        userEntity: UserEntity
+    ): HomeState {
+        val todayMeals = filterMealsByDate(allMeals, currentDate)
+        val nutritionTotals = calculateNutritionTotals(todayMeals)
+        val timeOfDaySummaries = createTimeOfDaySummaries(todayMeals)
+        val calendarData = createCalendarData(allMeals)
+        val displayedMonth = currentDate.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault()))
 
-            // Filter today's meals
-            val todayMeals = filterMealsByDate(allMeals, currentDate)
+        Log.d("HomeViewModel", "Processing with User prefs -> maxCalories=${userEntity.maxCalories}, maxProtein=${userEntity.maxProtein}, maxCarbs=${userEntity.maxCarbs}, maxFat=${userEntity.maxFat}")
 
-            // Calculate nutrition totals
-            val nutritionTotals = calculateNutritionTotals(todayMeals)
-
-            // Create time of day summaries
-            val timeOfDaySummaries = createTimeOfDaySummaries(todayMeals)
-
-            // Create calendar data
-            val calendarData = createCalendarData(allMeals)
-
-            // Get user preferences (default values for now)
-            val userPreferences = getUserPreferences()
-
-            val displayedMonth = LocalDate.now().format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault()))
-
-            return HomeState(
-                uiState = HomeUiState(
-                    morning = timeOfDaySummaries.morning,
-                    afternoon = timeOfDaySummaries.afternoon,
-                    evening = timeOfDaySummaries.evening
-                ),
-                calendarData = calendarData,
-                displayedMonth = displayedMonth,
-                todayCalories = nutritionTotals.calories,
-                todayProtein = nutritionTotals.protein,
-                todayCarbs = nutritionTotals.carbs,
-                todayFat = nutritionTotals.fat,
-                maxCalories = userPreferences.maxCalories,
-                maxProtein = userPreferences.maxProtein,
-                maxCarbs = userPreferences.maxCarbs,
-                maxFat = userPreferences.maxFat,
-                isLoading = false,
-                errorMessage = null
-            )
-        } catch (e: Exception) {
-            return _homeState.value.copy(
-                isLoading = false,
-                errorMessage = "Failed to load data: ${e.message}"
-            )
-        }
+        return HomeState(
+            uiState = HomeUiState(
+                morning = timeOfDaySummaries.morning,
+                afternoon = timeOfDaySummaries.afternoon,
+                evening = timeOfDaySummaries.evening
+            ),
+            calendarData = calendarData,
+            displayedMonth = displayedMonth,
+            todayCalories = nutritionTotals.calories,
+            todayProtein = nutritionTotals.protein,
+            todayCarbs = nutritionTotals.carbs,
+            todayFat = nutritionTotals.fat,
+            maxCalories = userEntity.maxCalories.toDouble(),
+            maxProtein = userEntity.maxProtein.toDouble(),
+            maxCarbs = userEntity.maxCarbs.toDouble(),
+            maxFat = userEntity.maxFat.toDouble(),
+            isLoading = false,
+            errorMessage = null
+        )
     }
 
     /**
@@ -241,10 +233,10 @@ class HomeViewModel(private val mealDao: MealDao) : ViewModel() {
                 timeInMillis = meal.meal.created_at
             }.get(Calendar.HOUR_OF_DAY)
 
-            when {
-                hour in 5..10 || hour in 0..4 -> morningMeals.add(meal)
-                hour in 11..16 -> afternoonMeals.add(meal)
-                hour in 17..23 -> eveningMeals.add(meal)
+            when (hour) {
+                in 0..4, in 5..10 -> morningMeals.add(meal)
+                in 11..16 -> afternoonMeals.add(meal)
+                else -> eveningMeals.add(meal)
             }
         }
 
@@ -277,44 +269,21 @@ class HomeViewModel(private val mealDao: MealDao) : ViewModel() {
         val today = LocalDate.now()
         val calendarDays = mutableListOf<CalendarDayData>()
 
-        // Create date to calories map
-        val caloriesByDate = mutableMapOf<LocalDate, Double>()
-        allMeals.forEach { meal ->
-            val mealDate = Instant.ofEpochMilli(meal.meal.created_at)
-                .atZone(ZoneId.systemDefault()).toLocalDate()
-            val calories = (meal.nutrition?.energy_kcal ?: 0.0) * (meal.meal.quantity ?: 1.0)
-            caloriesByDate[mealDate] = caloriesByDate.getOrDefault(mealDate, 0.0) + calories
-        }
+        val caloriesByDate = allMeals.groupBy(
+            { Instant.ofEpochMilli(it.meal.created_at).atZone(ZoneId.systemDefault()).toLocalDate() },
+            { (it.nutrition?.energy_kcal ?: 0.0) * (it.meal.quantity ?: 1.0) }
+        ).mapValues { it.value.sum() }
 
-        // Generate calendar data for last 7 days
         for (i in 0 until daysCount) {
             val date = today.minusDays((daysCount - 1 - i).toLong())
             val dayName = date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault())
             val dayNumber = date.dayOfMonth.toString()
             val calories = caloriesByDate[date] ?: 0.0
-            val caloriesStr = if (calories % 1.0 == 0.0) {
-                calories.toInt().toString()
-            } else {
-                String.format(Locale.getDefault(), "%.1f", calories)
-            }
-
+            val caloriesStr = if (calories % 1.0 == 0.0) calories.toInt().toString() else String.format(Locale.getDefault(), "%.1f", calories)
             calendarDays.add(CalendarDayData(date, dayName, dayNumber, caloriesStr))
         }
 
         return calendarDays
-    }
-
-    /**
-     * Gets user preferences (placeholder for future implementation)
-     */
-    private suspend fun getUserPreferences(): UserPreferences {
-        // TODO: Implement actual user preferences retrieval
-        return UserPreferences(
-            maxCalories = 2000.0,
-            maxProtein = 150.0,
-            maxCarbs = 300.0,
-            maxFat = 100.0
-        )
     }
 
     /**
@@ -338,12 +307,6 @@ class HomeViewModel(private val mealDao: MealDao) : ViewModel() {
         val evening: TimeOfDaySummaryData
     )
 
-    private data class UserPreferences(
-        val maxCalories: Double,
-        val maxProtein: Double,
-        val maxCarbs: Double,
-        val maxFat: Double
-    )
 
     /**
      * Public method to refresh data manually
