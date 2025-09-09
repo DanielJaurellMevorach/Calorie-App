@@ -188,7 +188,7 @@ fun ProfileScreen(
                         horizontalAlignment = Alignment.Start
                     ) {
                         Text(
-                            text = "Use your own OpenAI API key. Processing will be made at your own expense.",
+                            text = "Using your own OpenAI API key is a requirement. Processing will be made at your own expense.",
                             color = Color.White,
                             modifier = Modifier.fillMaxWidth(),
                             textAlign = TextAlign.Start,
@@ -294,7 +294,7 @@ fun ProfileScreen(
                             modifier = Modifier.size(tokens.sDp(40.dp))
                         )
                         Text(
-                            text = "No personal or identifiable data is collected. Your API key is stored locally.",
+                            text = "No personal or identifiable data is collected. Your API key is stored locally in plaint text.",
                             color = Color.White,
                             modifier = Modifier.padding(start = tokens.sDp(16.dp)),
                             fontSize = tokens.calendarTextSize.times(1.2),
