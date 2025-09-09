@@ -296,7 +296,11 @@ class AnalyticsViewModel(private val mealDao: MealDao) : ViewModel() {
         } else {
             FilterState(selectedFilter = null, selectedDate = date, searchText = "")
         }
-        updateFilterState(newFilterState)
+        _uiState.value = _uiState.value.copy(
+            filterState = newFilterState,
+            localSearchText = ""
+        )
+        reprocess()
     }
 
     fun onWeekChanged(visibleDates: List<LocalDate>) {
@@ -318,37 +322,36 @@ class AnalyticsViewModel(private val mealDao: MealDao) : ViewModel() {
         }
     }
 
-    fun onFilterToggled(filter: String) {
-        val currentState = _uiState.value.filterState
-        val newFilterState: FilterState
-        val newDisplayDate: LocalDate
-
-        if (currentState.selectedFilter == filter) {
-            // If clicking the same filter, deselect it
-            newFilterState = FilterState(selectedFilter = null, selectedDate = null, searchText = "")
-            newDisplayDate = today // Reset to today's week
-        } else {
-            // Select the new filter
-            newFilterState = FilterState(selectedFilter = filter, selectedDate = today, searchText = "")
-            newDisplayDate = today // Teleport to today's week for all filters
-        }
-
-        _uiState.value = _uiState.value.copy(displayDate = newDisplayDate)
-        updateFilterState(newFilterState)
-    }
-
-    fun onSearchTextChanged(searchText: String) {
-        _uiState.value = _uiState.value.copy(localSearchText = searchText)
-    }
-
-    fun onSearchAction(searchText: String) {
-        val newFilterState = _uiState.value.filterState.copy(
-            searchText = searchText,
-            selectedFilter = if (searchText.isNotEmpty()) null else _uiState.value.filterState.selectedFilter
+    // Called when the user types in the search bar
+    fun onSearchTextChanged(newText: String) {
+        val currentState = _uiState.value
+        // Clear filter and highlighted dates, update search text
+        val newFilterState = currentState.filterState.copy(
+            selectedFilter = null,
+            selectedDate = null,
+            searchText = newText
         )
-        updateFilterState(newFilterState)
-        // Also update local search text to match
-        _uiState.value = _uiState.value.copy(localSearchText = searchText)
+        _uiState.value = currentState.copy(
+            filterState = newFilterState,
+            localSearchText = newText
+        )
+        reprocess()
+    }
+
+    // Called when a filter toggle is pressed
+    fun onFilterToggled(filter: String) {
+        val currentState = _uiState.value
+        // Clear search text, set selected filter
+        val newFilterState = currentState.filterState.copy(
+            selectedFilter = filter,
+            selectedDate = if (filter == "Today") today else null,
+            searchText = ""
+        )
+        _uiState.value = currentState.copy(
+            filterState = newFilterState,
+            localSearchText = ""
+        )
+        reprocess()
     }
 
     /**

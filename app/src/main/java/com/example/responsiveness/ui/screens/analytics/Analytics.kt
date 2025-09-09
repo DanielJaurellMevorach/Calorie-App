@@ -141,7 +141,10 @@ fun Analytics(
                         .padding(horizontal = tokens.sDp(8.dp)),
                     searchText = analyticsState.localSearchText,
                     onSearchTextChange = viewModel::onSearchTextChanged,
-                    onSearchAction = { viewModel.onSearchAction(analyticsState.localSearchText) }
+                    onSearchAction = {
+                        focusManager.clearFocus()
+                        keyboardController?.hide()
+                    }
                 )
 
                 Spacer(modifier = Modifier.height(tokens.sDp(8.dp)))
