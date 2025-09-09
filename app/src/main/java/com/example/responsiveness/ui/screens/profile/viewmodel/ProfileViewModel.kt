@@ -16,7 +16,8 @@ class ProfileViewModel(private val repository: MealRepository) : ViewModel() {
 
     init {
         viewModelScope.launch {
-            repository.getUser().collectLatest { user ->
+            // Use getOrCreateUser to ensure a non-null user is emitted (creates default user if missing)
+            repository.getOrCreateUser().collectLatest { user ->
                 _userSettings.value = user
             }
         }
@@ -40,12 +41,6 @@ class ProfileViewModel(private val repository: MealRepository) : ViewModel() {
     fun updateMaxFat(value: Int) {
         viewModelScope.launch {
             _userSettings.value?.let { repository.updateMaxFat(it.id, value) }
-        }
-    }
-
-    fun updateApiKey(value: String) {
-        viewModelScope.launch {
-            _userSettings.value?.let { repository.updateApiKey(it.id, value) }
         }
     }
 
