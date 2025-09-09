@@ -269,11 +269,103 @@ class AnalyticsViewModel(private val mealDao: MealDao) : ViewModel() {
      * Public methods for UI interactions
      */
 
+    // Called when a filter toggle is pressed
+    fun onFilterToggled(filter: String) {
+        val currentState = _uiState.value
+
+        // If the same filter is already selected, untoggle it
+        if (currentState.filterState.selectedFilter == filter) {
+            val newFilterState = FilterState(
+                selectedFilter = null,
+                selectedDate = null,
+                searchText = ""
+            )
+            _uiState.value = currentState.copy(
+                filterState = newFilterState,
+                localSearchText = ""
+            )
+            reprocess()
+            return
+        }
+
+        // Clear search text, set selected filter
+        val newFilterState = currentState.filterState.copy(
+            selectedFilter = filter,
+            selectedDate = if (filter == "Today") today else null,
+            searchText = ""
+        )
+        _uiState.value = currentState.copy(
+            filterState = newFilterState,
+            localSearchText = ""
+        )
+
+        // Navigate to appropriate date range if not visible
+        navigateToFilterDateRange(filter)
+        reprocess()
+    }
+
+    /**
+     * Navigates the calendar to show the appropriate date range for the selected filter
+     */
+    private fun navigateToFilterDateRange(filter: String) {
+        val currentVisibleDates = _uiState.value.calendarData.map { it.date }
+        val targetDate = when (filter) {
+            "Today" -> today
+            "Last 7 Days" -> today // Show current week which includes today
+            "Last 30 Days" -> today // Show current week which includes today
+            else -> return
+        }
+
+        // Check if target date is visible in current calendar view
+        val isTargetVisible = currentVisibleDates.contains(targetDate)
+
+        if (!isTargetVisible) {
+            // Navigate to show the target date
+            _uiState.value = _uiState.value.copy(displayDate = targetDate)
+        }
+    }
+
+    /**
+     * Checks if current filter dates are visible and untoggle if not
+     */
+    private fun checkAndUntoggleIfNotVisible() {
+        val currentState = _uiState.value
+        val visibleDates = currentState.calendarData.map { it.date }
+        val filterState = currentState.filterState
+
+        when (filterState.selectedFilter) {
+            "Today" -> {
+                if (!visibleDates.contains(today)) {
+                    val newFilterState = filterState.copy(selectedFilter = null, selectedDate = null)
+                    _uiState.value = currentState.copy(filterState = newFilterState)
+                }
+            }
+            "Last 7 Days" -> {
+                val last7Days = List(7) { today.minusDays(it.toLong()) }
+                val hasAnyVisible = last7Days.any { visibleDates.contains(it) }
+                if (!hasAnyVisible) {
+                    val newFilterState = filterState.copy(selectedFilter = null, selectedDate = null)
+                    _uiState.value = currentState.copy(filterState = newFilterState)
+                }
+            }
+            "Last 30 Days" -> {
+                val last30Days = List(30) { today.minusDays(it.toLong()) }
+                val hasAnyVisible = last30Days.any { visibleDates.contains(it) }
+                if (!hasAnyVisible) {
+                    val newFilterState = filterState.copy(selectedFilter = null, selectedDate = null)
+                    _uiState.value = currentState.copy(filterState = newFilterState)
+                }
+            }
+        }
+    }
+
     fun onPreviousWeek() {
         viewModelScope.launch {
             val newDate = _uiState.value.displayDate.minusWeeks(1)
             _uiState.value = _uiState.value.copy(displayDate = newDate, isLoading = true)
             reprocess()
+            // Check if we need to untoggle filters after navigation
+            checkAndUntoggleIfNotVisible()
         }
     }
 
@@ -287,6 +379,8 @@ class AnalyticsViewModel(private val mealDao: MealDao) : ViewModel() {
                 _uiState.value = _uiState.value.copy(displayDate = newDate, isLoading = true)
             }
             reprocess()
+            // Check if we need to untoggle filters after navigation
+            checkAndUntoggleIfNotVisible()
         }
     }
 
@@ -334,22 +428,6 @@ class AnalyticsViewModel(private val mealDao: MealDao) : ViewModel() {
         _uiState.value = currentState.copy(
             filterState = newFilterState,
             localSearchText = newText
-        )
-        reprocess()
-    }
-
-    // Called when a filter toggle is pressed
-    fun onFilterToggled(filter: String) {
-        val currentState = _uiState.value
-        // Clear search text, set selected filter
-        val newFilterState = currentState.filterState.copy(
-            selectedFilter = filter,
-            selectedDate = if (filter == "Today") today else null,
-            searchText = ""
-        )
-        _uiState.value = currentState.copy(
-            filterState = newFilterState,
-            localSearchText = ""
         )
         reprocess()
     }
