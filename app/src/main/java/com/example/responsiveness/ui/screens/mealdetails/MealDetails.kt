@@ -222,6 +222,7 @@ fun DatabaseMealDetailsScreen(
                 onBackClick = {
                     when (source) {
                         "analytics" -> navController.navigateUp()
+                        "home" -> navController.navigateUp()
                         else -> navController.navigate(HomeRoute)
                     }
                 }
@@ -270,6 +271,7 @@ fun DatabaseMealDetailsScreen(
                 onBackClick = {
                     when (source) {
                         "analytics" -> navController.navigateUp()
+                        "home" -> navController.navigateUp()
                         else -> navController.navigate(HomeRoute)
                     }
                 }
