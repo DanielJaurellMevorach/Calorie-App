@@ -42,6 +42,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // Coroutine to initialize data for home screen, analytics screen on default 'today', and max values on profile page during splash screen, and navigation safe area calculation
+
+
         setContent {
             ResponsivenessTheme {
 
