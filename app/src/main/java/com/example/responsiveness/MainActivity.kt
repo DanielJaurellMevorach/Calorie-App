@@ -169,12 +169,6 @@ object ProfileRoute
 @Serializable
 object LogsRoute
 
-//@Serializable
-//data class MealDetailScreenRoute (
-//    val imageUri: String,
-//    val mealDetailsJson: String
-//)
-
 @Serializable
 data class DatabaseMealDetailRoute (
     val mealId: Long,
