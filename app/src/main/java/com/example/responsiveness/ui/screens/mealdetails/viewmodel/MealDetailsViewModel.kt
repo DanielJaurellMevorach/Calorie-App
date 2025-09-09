@@ -38,6 +38,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
 import java.time.LocalDateTime
@@ -271,10 +272,19 @@ class MealDetailsViewModel(
      */
     fun fetchMealDetailsById(mealId: Long, context: Context) {
         viewModelScope.launch {
-            val database = MealDatabase.getDatabase(context)
-            val repository = MealRepository(database.mealDao())
-            val mealWithDetails = repository.getMealWithDetails(mealId)
-            _databaseMealDetailsState.value = mealWithDetails
+            try {
+                _isLoading.value = true
+                val database = MealDatabase.getDatabase(context)
+                val repository = MealRepository(database.mealDao())
+                val mealWithDetails = repository.getMealWithDetails(mealId)
+                _databaseMealDetailsState.value = mealWithDetails
+            } catch (e: Exception) {
+                // Log and ensure UI reflects absence of data
+                Log.e("MealDetailsViewModel", "Failed to fetch meal details", e)
+                _databaseMealDetailsState.value = null
+            } finally {
+                _isLoading.value = false
+            }
         }
     }
 

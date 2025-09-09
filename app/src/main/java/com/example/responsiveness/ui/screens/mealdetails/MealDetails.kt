@@ -209,7 +209,12 @@ fun DatabaseMealDetailsScreen(
     LaunchedEffect(mealId) { vm.fetchMealDetailsById(mealId, context) }
 
     if (mealWithDetails == null) {
-        ErrorState(message = "Meal not found or still loading.")
+        if (isLoading) {
+            // Show a neutral empty Box or a loading placeholder while the DB lookup is still loading
+            Box(modifier = Modifier.fillMaxSize().background(Color.White))
+        } else {
+            ErrorState(message = "Meal not found or still loading.")
+        }
     } else {
         if (isCorrectionLoading) {
             MealCorrectionLoading(

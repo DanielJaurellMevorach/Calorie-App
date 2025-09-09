@@ -165,11 +165,11 @@ object ProfileRoute
 @Serializable
 object LogsRoute
 
-@Serializable
-data class MealDetailScreenRoute (
-    val imageUri: String,
-    val mealDetailsJson: String // Add meal details as JSON string
-)
+//@Serializable
+//data class MealDetailScreenRoute (
+//    val imageUri: String,
+//    val mealDetailsJson: String
+//)
 
 @Serializable
 data class DatabaseMealDetailRoute (
@@ -180,5 +180,5 @@ data class DatabaseMealDetailRoute (
 @Serializable
 data class MealDetailPageLoadingRoute(
     val imageUri: String,
-    val selectedTimeOfDay: String? = null // NEW: optional time of day
+    val selectedTimeOfDay: String? = null
 )
