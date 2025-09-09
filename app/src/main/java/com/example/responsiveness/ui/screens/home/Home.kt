@@ -80,6 +80,7 @@ fun HomeScreen(
                 // Calendar component - data prepared in ViewModel
                 CalendarCalories(
                     calendarData = homeState.calendarData,
+                    displayedMonth = homeState.displayedMonth,
                     tokens = tokens,
                     analytics = false,
                     modifier = Modifier

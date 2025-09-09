@@ -97,7 +97,6 @@ fun Analytics(
 
         // Single state collection - all logic moved to ViewModel
         val analyticsState by viewModel.uiState.collectAsState()
-        val calendarCaloriesByDate by viewModel.calendarCaloriesByDate.collectAsState()
         val safePadding = rememberSafeContentPadding(
             includeStatusBar = true,
             includeNavigationBar = true,
@@ -117,7 +116,8 @@ fun Analytics(
             ) {
                 // Calendar component - data and interactions handled by ViewModel
                 CalendarCalories(
-                    calendarCaloriesByDate = calendarCaloriesByDate,
+                    calendarData = analyticsState.calendarData,
+                    displayedMonth = analyticsState.displayedMonth,
                     tokens = tokens,
                     analytics = true,
                     modifier = Modifier
@@ -126,18 +126,9 @@ fun Analytics(
                     onDateSelected = viewModel::onDateSelected,
                     selectedDate = analyticsState.filterState.selectedDate,
                     highlightedDates = analyticsState.highlightedDates,
-                    scrollToDate = analyticsState.scrollToDate,
-                    onWeekChanged = viewModel::onWeekChanged,
-                    onPreviousWeek = {
-                        val current = analyticsState.scrollToDate ?: java.time.LocalDate.now()
-                        val newDate = current.minusDays(7)
-                        viewModel.onDateSelected(newDate)
-                    },
-                    onNextWeek = {
-                        val current = analyticsState.scrollToDate ?: java.time.LocalDate.now()
-                        val newDate = current.plusDays(7)
-                        viewModel.onDateSelected(newDate)
-                    }
+                    onPreviousWeek = viewModel::onPreviousWeek,
+                    onNextWeek = viewModel::onNextWeek,
+                    isNextWeekEnabled = analyticsState.isNextWeekEnabled
                 )
 
                 Spacer(modifier = Modifier.height(tokens.sDp(4.dp)))

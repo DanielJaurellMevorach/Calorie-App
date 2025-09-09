@@ -16,12 +16,14 @@ import kotlinx.coroutines.delay
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Calendar
 import java.util.Locale
 
 // Data classes for UI state
 data class CalendarDayData(
+    val date: LocalDate,
     val dayName: String,
     val dayNumber: String,
     val calories: String
@@ -42,6 +44,7 @@ data class HomeUiState(
 data class HomeState(
     val uiState: HomeUiState = HomeUiState(),
     val calendarData: List<CalendarDayData> = emptyList(),
+    val displayedMonth: String = "",
     val todayCalories: Double = 0.0,
     val todayProtein: Double = 0.0,
     val todayCarbs: Double = 0.0,
@@ -169,6 +172,8 @@ class HomeViewModel(private val mealDao: MealDao) : ViewModel() {
             // Get user preferences (default values for now)
             val userPreferences = getUserPreferences()
 
+            val displayedMonth = LocalDate.now().format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault()))
+
             return HomeState(
                 uiState = HomeUiState(
                     morning = timeOfDaySummaries.morning,
@@ -176,6 +181,7 @@ class HomeViewModel(private val mealDao: MealDao) : ViewModel() {
                     evening = timeOfDaySummaries.evening
                 ),
                 calendarData = calendarData,
+                displayedMonth = displayedMonth,
                 todayCalories = nutritionTotals.calories,
                 todayProtein = nutritionTotals.protein,
                 todayCarbs = nutritionTotals.carbs,
@@ -292,7 +298,7 @@ class HomeViewModel(private val mealDao: MealDao) : ViewModel() {
                 String.format(Locale.getDefault(), "%.1f", calories)
             }
 
-            calendarDays.add(CalendarDayData(dayName, dayNumber, caloriesStr))
+            calendarDays.add(CalendarDayData(date, dayName, dayNumber, caloriesStr))
         }
 
         return calendarDays
@@ -315,16 +321,7 @@ class HomeViewModel(private val mealDao: MealDao) : ViewModel() {
      * Converts calendar data to map for backward compatibility
      */
     private fun calendarDataToMap(calendarData: List<CalendarDayData>): Map<LocalDate, String> {
-        val today = LocalDate.now()
-        val daysCount = 7
-        val map = mutableMapOf<LocalDate, String>()
-
-        calendarData.forEachIndexed { index, data ->
-            val date = today.minusDays((daysCount - 1 - index).toLong())
-            map[date] = data.calories
-        }
-
-        return map
+        return calendarData.associate { it.date to it.calories }
     }
 
     // Helper data classes

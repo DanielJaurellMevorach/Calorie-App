@@ -20,9 +20,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,8 +33,6 @@ import com.composables.icons.lucide.Lucide
 import com.example.responsiveness.ui.screens.home.viewmodel.CalendarDayData
 import com.example.responsiveness.ui.theme.DesignTokens
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 /**
  * Optimized CalendarCalories component following MVVM principles.
@@ -51,18 +47,11 @@ fun CalendarCalories(
     onDateSelected: (LocalDate) -> Unit = {},
     selectedDate: LocalDate? = null,
     highlightedDates: List<LocalDate> = emptyList(),
-    scrollToDate: LocalDate? = null,
-    onWeekChanged: (List<LocalDate>) -> Unit = {},
-    onPreviousWeek: (() -> Unit)? = null,
-    onNextWeek: (() -> Unit)? = null
+    displayedMonth: String = "",
+    onPreviousWeek: () -> Unit = {},
+    onNextWeek: () -> Unit = {},
+    isNextWeekEnabled: Boolean = false
 ) {
-    // State for selected day (for analytics mode)
-    var selectedDayIndex by remember { mutableStateOf(6) } // Default to today (last day)
-
-    // Current month display - calculated from today for simplicity
-    val today = LocalDate.now()
-    val currentMonth = today.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault()))
-
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -82,7 +71,7 @@ fun CalendarCalories(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = currentMonth,
+                    text = displayedMonth,
                     color = Color.Black,
                     fontWeight = FontWeight.Bold,
                     fontSize = tokens.sSp(14.sp)
@@ -99,7 +88,7 @@ fun CalendarCalories(
                                     indication = null,
                                     interactionSource = remember { MutableInteractionSource() }
                                 ) {
-                                    onPreviousWeek?.invoke()
+                                    onPreviousWeek()
                                 }
                         ) {
                             Icon(
@@ -112,21 +101,23 @@ fun CalendarCalories(
                         Spacer(modifier = Modifier.width(tokens.sDp(8.dp)))
 
                         // Next week arrow
+                        val nextWeekTintColor = if (isNextWeekEnabled) Color(0xFF6B6B6B) else Color(0xFFD3D3D3)
                         Box(
                             modifier = Modifier
                                 .background(Color(0xFFFAFAFA), RoundedCornerShape(50.dp))
                                 .padding(tokens.sDp(8.dp))
                                 .clickable(
+                                    enabled = isNextWeekEnabled,
                                     indication = null,
                                     interactionSource = remember { MutableInteractionSource() }
                                 ) {
-                                    onNextWeek?.invoke()
+                                    onNextWeek()
                                 }
                         ) {
                             Icon(
                                 imageVector = Lucide.ArrowRight,
                                 contentDescription = "Next Week",
-                                tint = Color(0xFF6B6B6B)
+                                tint = nextWeekTintColor
                             )
                         }
                     }
@@ -141,18 +132,15 @@ fun CalendarCalories(
                 horizontalArrangement = Arrangement.spacedBy(tokens.sDp(8.dp)),
                 verticalAlignment = Alignment.Top
             ) {
-                calendarData.forEachIndexed { index, dayData ->
+                calendarData.forEach { dayData ->
                     CalendarDay(
                         dayData = dayData,
-                        isSelected = if (analytics) index == selectedDayIndex else index == 6, // Home always shows today selected
-                        isHighlighted = false, // Could be extended for highlighted dates
+                        isSelected = if (analytics) dayData.date == selectedDate else dayData.date == LocalDate.now(),
+                        isHighlighted = highlightedDates.contains(dayData.date),
                         tokens = tokens,
                         onDayClick = {
                             if (analytics) {
-                                selectedDayIndex = index
-                                // Convert index to LocalDate and notify parent
-                                val date = today.minusDays((6 - index).toLong())
-                                onDateSelected(date)
+                                onDateSelected(dayData.date)
                             }
                         },
                         modifier = Modifier.weight(1f)
@@ -261,47 +249,4 @@ private fun CalendarDay(
             lineHeight = tokens.calendarTextSize
         )
     }
-}
-
-/**
- * Backward compatibility overload for existing callers
- */
-@Composable
-fun CalendarCalories(
-    modifier: Modifier = Modifier,
-    calendarCaloriesByDate: Map<LocalDate, String>,
-    tokens: DesignTokens.Tokens,
-    analytics: Boolean = false,
-    onDateSelected: (LocalDate) -> Unit = {},
-    selectedDate: LocalDate? = null,
-    highlightedDates: List<LocalDate> = emptyList(),
-    scrollToDate: LocalDate? = null,
-    onWeekChanged: (List<LocalDate>) -> Unit = {},
-    onPreviousWeek: (() -> Unit)? = null,
-    onNextWeek: (() -> Unit)? = null
-) {
-    // Convert map to CalendarDayData list for backward compatibility
-    val today = LocalDate.now()
-    val calendarData = (0..6).map { i ->
-        val date = today.minusDays((6 - i).toLong())
-        CalendarDayData(
-            dayName = date.dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, Locale.getDefault()),
-            dayNumber = date.dayOfMonth.toString(),
-            calories = calendarCaloriesByDate[date] ?: "0"
-        )
-    }
-
-    CalendarCalories(
-        modifier = modifier,
-        calendarData = calendarData,
-        tokens = tokens,
-        analytics = analytics,
-        onDateSelected = onDateSelected,
-        selectedDate = selectedDate,
-        highlightedDates = highlightedDates,
-        scrollToDate = scrollToDate,
-        onWeekChanged = onWeekChanged,
-        onPreviousWeek = onPreviousWeek,
-        onNextWeek = onNextWeek
-    )
 }

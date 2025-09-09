@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.anothercalorieapp.database.MealWithDetails
 import com.example.responsiveness.database.dao.MealDao
+import com.example.responsiveness.ui.screens.home.viewmodel.CalendarDayData
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,6 +16,7 @@ import kotlinx.coroutines.delay
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Calendar
 import java.util.Locale
@@ -33,7 +35,11 @@ data class AnalyticsUiState(
     val scrollToDate: LocalDate? = null,
     val localSearchText: String = "",
     val isLoading: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val displayDate: LocalDate = LocalDate.now(),
+    val calendarData: List<CalendarDayData> = emptyList(),
+    val displayedMonth: String = "",
+    val isNextWeekEnabled: Boolean = false
 )
 
 /**
@@ -87,6 +93,7 @@ class AnalyticsViewModel(private val mealDao: MealDao) : ViewModel() {
             ) { allMeals, _ ->
                 allMeals
             }.collect { allMeals ->
+                _allMeals.value = allMeals
                 val newState = processData(allMeals)
                 _uiState.value = newState
                 // Update legacy states for backward compatibility
@@ -103,6 +110,12 @@ class AnalyticsViewModel(private val mealDao: MealDao) : ViewModel() {
         _calendarCaloriesByDate.value = createCalendarCaloriesMap(allMeals)
     }
 
+    private fun reprocess() {
+        val currentMeals = _allMeals.value
+        val newState = processData(currentMeals)
+        _uiState.value = newState
+    }
+
     /**
      * Processes meal data and creates the analytics state
      */
@@ -112,11 +125,27 @@ class AnalyticsViewModel(private val mealDao: MealDao) : ViewModel() {
             val filteredMeals = filterMeals(allMeals, currentState.filterState)
             val highlightedDates = calculateHighlightedDates(currentState.filterState)
             val scrollToDate = calculateScrollToDate(currentState.filterState)
+            val calendarData = createCalendarDataForWeek(currentState.displayDate, allMeals)
+
+            val monthFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
+            val startMonth = calendarData.firstOrNull()?.date?.format(monthFormatter) ?: ""
+            val endMonth = calendarData.lastOrNull()?.date?.format(monthFormatter) ?: ""
+            val finalMonthDisplay = if (startMonth.isNotEmpty() && startMonth != endMonth) {
+                "${calendarData.first().date.format(DateTimeFormatter.ofPattern("MMM"))} - ${calendarData.last().date.format(monthFormatter)}"
+            } else {
+                startMonth
+            }
+
+            val isNextWeekEnabled = calendarData.lastOrNull()?.date?.isBefore(LocalDate.now()) ?: false
+
 
             return currentState.copy(
                 filteredMeals = filteredMeals,
                 highlightedDates = highlightedDates,
                 scrollToDate = scrollToDate,
+                calendarData = calendarData,
+                displayedMonth = finalMonthDisplay,
+                isNextWeekEnabled = isNextWeekEnabled,
                 isLoading = false,
                 errorMessage = null
             )
@@ -127,6 +156,30 @@ class AnalyticsViewModel(private val mealDao: MealDao) : ViewModel() {
             )
         }
     }
+
+    /**
+     * Generates calendar data for the 7-day period ending on the given displayDate.
+     */
+    private fun createCalendarDataForWeek(displayDate: LocalDate, allMeals: List<MealWithDetails>): List<CalendarDayData> {
+        val daysCount = 7
+        val calendarDays = mutableListOf<CalendarDayData>()
+        val caloriesByDate = createCalendarCaloriesMap(allMeals).mapValues { it.value.toDoubleOrNull() ?: 0.0 }
+
+        for (i in 0 until daysCount) {
+            val date = displayDate.minusDays((daysCount - 1 - i).toLong())
+            val dayName = date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault())
+            val dayNumber = date.dayOfMonth.toString()
+            val calories = caloriesByDate[date] ?: 0.0
+            val caloriesStr = if (calories % 1.0 == 0.0) {
+                calories.toInt().toString()
+            } else {
+                String.format(Locale.getDefault(), "%.1f", calories)
+            }
+            calendarDays.add(CalendarDayData(date, dayName, dayNumber, caloriesStr))
+        }
+        return calendarDays
+    }
+
 
     /**
      * Filters meals based on current filter state
@@ -150,7 +203,7 @@ class AnalyticsViewModel(private val mealDao: MealDao) : ViewModel() {
                     mealDate in sevenDaysAgo..today
                 }
                 "Last 30 Days" -> {
-                    val thirtyDaysAgo = today.minusDays(30)
+                    val thirtyDaysAgo = today.minusDays(29)
                     mealDate in thirtyDaysAgo..today
                 }
                 null -> {
@@ -195,7 +248,7 @@ class AnalyticsViewModel(private val mealDao: MealDao) : ViewModel() {
      */
     private fun createCalendarCaloriesMap(allMeals: List<MealWithDetails>): Map<LocalDate, String> {
         val caloriesByDate = mutableMapOf<LocalDate, Double>()
-        
+
         allMeals.forEach { meal ->
             val mealDate = Instant.ofEpochMilli(meal.meal.created_at)
                 .atZone(ZoneId.systemDefault()).toLocalDate()
@@ -216,6 +269,27 @@ class AnalyticsViewModel(private val mealDao: MealDao) : ViewModel() {
      * Public methods for UI interactions
      */
 
+    fun onPreviousWeek() {
+        viewModelScope.launch {
+            val newDate = _uiState.value.displayDate.minusWeeks(1)
+            _uiState.value = _uiState.value.copy(displayDate = newDate, isLoading = true)
+            reprocess()
+        }
+    }
+
+    fun onNextWeek() {
+        viewModelScope.launch {
+            val newDate = _uiState.value.displayDate.plusWeeks(1)
+            // Do not allow navigating past today
+            if (newDate.isAfter(LocalDate.now())) {
+                _uiState.value = _uiState.value.copy(displayDate = LocalDate.now(), isLoading = true)
+            } else {
+                _uiState.value = _uiState.value.copy(displayDate = newDate, isLoading = true)
+            }
+            reprocess()
+        }
+    }
+
     fun onDateSelected(date: LocalDate) {
         val newFilterState = if (date == today) {
             FilterState(selectedFilter = "Today", selectedDate = today, searchText = "")
@@ -228,7 +302,7 @@ class AnalyticsViewModel(private val mealDao: MealDao) : ViewModel() {
     fun onWeekChanged(visibleDates: List<LocalDate>) {
         val currentState = _uiState.value.filterState
         val containsToday = visibleDates.contains(today)
-        
+
         if (!containsToday) {
             // If today is not visible, untoggle filter, but keep selected date if set
             if (currentState.selectedFilter != null) {
@@ -246,14 +320,20 @@ class AnalyticsViewModel(private val mealDao: MealDao) : ViewModel() {
 
     fun onFilterToggled(filter: String) {
         val currentState = _uiState.value.filterState
-        val newFilterState = if (currentState.selectedFilter == filter) {
-            // If clicking the same filter, deselect it (go to "All" mode)
-            FilterState(selectedFilter = null, selectedDate = null, searchText = "")
+        val newFilterState: FilterState
+        val newDisplayDate: LocalDate
+
+        if (currentState.selectedFilter == filter) {
+            // If clicking the same filter, deselect it
+            newFilterState = FilterState(selectedFilter = null, selectedDate = null, searchText = "")
+            newDisplayDate = today // Reset to today's week
         } else {
             // Select the new filter
-            val newDate = if (filter == "Today") today else null
-            FilterState(selectedFilter = filter, selectedDate = newDate, searchText = "")
+            newFilterState = FilterState(selectedFilter = filter, selectedDate = today, searchText = "")
+            newDisplayDate = today // Teleport to today's week for all filters
         }
+
+        _uiState.value = _uiState.value.copy(displayDate = newDisplayDate)
         updateFilterState(newFilterState)
     }
 
