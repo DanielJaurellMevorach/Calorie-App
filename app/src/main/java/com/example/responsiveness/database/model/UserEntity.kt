@@ -12,5 +12,6 @@ data class UserEntity(
     val maxProtein: Int,
     //val apiKey: String = "",
     val apiKey: String? = null,
-    val lastPing: Long? = null
+    val lastPing: Long? = null,
+    val created_at: Long = System.currentTimeMillis(),
 )
