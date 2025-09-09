@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
-suspend fun sendPhotoToOpenAI(photoFile: File): String = withContext(Dispatchers.IO) {
+suspend fun sendPhotoToOpenAI(photoFile: File, apiKey: String): String = withContext(Dispatchers.IO) {
     Log.d("OpenAIRequest", "Preparing to send photo to OpenAI: ${photoFile.path}")
     // Read and encode the image
     val imageBytes = photoFile.readBytes()
@@ -55,6 +55,9 @@ suspend fun sendPhotoToOpenAI(photoFile: File): String = withContext(Dispatchers
         put("input", inputContent)
     }
 
+    Log.d("OpenAIRequest", "Request JSON: ${json.toString(2)}")
+    Log.d("OpenAIRequest", "Using API Key: Bearer ${if (apiKey.length > 12) "${apiKey.take(8)}...${apiKey.takeLast(4)}" else "key_too_short"}")
+
     // Prepare OkHttp request with longer timeouts
     val client = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)
@@ -65,7 +68,7 @@ suspend fun sendPhotoToOpenAI(photoFile: File): String = withContext(Dispatchers
     val body = RequestBody.create("application/json".toMediaTypeOrNull(), json.toString())
     val request = Request.Builder()
         .url("https://api.openai.com/v1/responses")
-        .header("Authorization", "Bearer ${BuildConfig.OPENAI_API_KEY}")
+        .header("Authorization", "Bearer $apiKey")
         .post(body)
         .build()
 
@@ -94,7 +97,9 @@ suspend fun sendPhotoToOpenAI(photoFile: File): String = withContext(Dispatchers
                             continuation.resume("Empty response")
                         }
                     } else {
+                        val errorBody = response.body?.string()
                         Log.e("OpenAIRequest", "HTTP Error: ${response.code} - ${response.message}")
+                        Log.e("OpenAIRequest", "Error Body: $errorBody")
                         continuation.resume("HTTP Error: ${response.code} - ${response.message}")
                     }
                 } catch (e: Exception) {

@@ -26,6 +26,7 @@ import com.example.anothercalorieapp.database.IngredientEntity
 import com.example.anothercalorieapp.database.MealDatabase
 import com.example.anothercalorieapp.database.MealWithDetails
 import com.example.anothercalorieapp.database.NutritionEntity
+import com.example.anothercalorieapp.database.UserEntity
 import com.example.responsiveness.database.repository.MealRepository
 import com.example.responsiveness.ui.components.general.resendMealDataToOpenAI
 import com.example.responsiveness.ui.screens.mealdetails.MealDetailsScreen
@@ -35,6 +36,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.IOException
@@ -138,7 +140,10 @@ class MealDetailsViewModel(
                 if (!photoFile.exists()) {
                     throw IOException("Photo file does not exist at path: $imagePath")
                 }
-                val responseJson = sendPhotoToOpenAI(photoFile)
+                // Fetch the only user (userId = 1) and get their apiKey
+                val user: UserEntity? = mealRepository.getUser(1).first()
+                val apiKey = user?.apiKey ?: throw IllegalStateException("No API key found for user")
+                val responseJson = sendPhotoToOpenAI(photoFile, apiKey)
                 Log.d("MealDetailsViewModel", "Raw OpenAI response: $responseJson")
                 if (responseJson.isBlank() || responseJson.startsWith("HTTP Error")) {
                     Log.e("MealDetailsViewModel", "OpenAI response is invalid: $responseJson")
@@ -371,7 +376,10 @@ class MealDetailsViewModel(
                     val mealDataJson = constructMealDataJson(currentMealWithDetails)
                     Log.d("MealDetailsViewModel", "Sending correction with meal data: $mealDataJson")
                     Log.d("MealDetailsViewModel", "User correction: $correction")
-                    val newAnalysisJson = resendMealDataToOpenAI(mealDataJson, correction)
+                    // Fetch the only user (userId = 1) and get their apiKey
+                    val user: UserEntity? = mealRepository.getUser(1).first()
+                    val apiKey = user?.apiKey ?: throw IllegalStateException("No API key found for user")
+                    val newAnalysisJson = resendMealDataToOpenAI(mealDataJson, correction, apiKey)
                     Log.d("MealDetailsViewModel", "Received corrected analysis: $newAnalysisJson")
                     val correctedMealData = try {
                         Gson().fromJson(newAnalysisJson, MealApiResponse::class.java)

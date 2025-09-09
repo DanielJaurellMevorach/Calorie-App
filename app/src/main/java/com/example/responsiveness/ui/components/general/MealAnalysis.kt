@@ -1,7 +1,6 @@
 package com.example.responsiveness.ui.components.general
 
 import android.util.Log
-import com.example.responsiveness.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
@@ -28,7 +27,7 @@ import kotlin.coroutines.resumeWithException
  * @param userMessage The additional message/question from the user about this meal
  * @return String response from OpenAI API
  */
-suspend fun resendMealDataToOpenAI(mealData: String, userMessage: String): String = withContext(Dispatchers.IO) {
+suspend fun resendMealDataToOpenAI(mealData: String, userMessage: String, apiKey: String): String = withContext(Dispatchers.IO) {
     Log.d("OpenAIRequest", "Preparing to resend meal data to OpenAI with user message: $userMessage")
     Log.d("OpenAIRequest", "Original meal data: $mealData")
 
@@ -76,7 +75,8 @@ suspend fun resendMealDataToOpenAI(mealData: String, userMessage: String): Strin
         put("temperature", 0.7)
     }
 
-    Log.d("OpenAIRequest", "Request payload: ${json.toString()}")
+    Log.d("OpenAIRequest", "Request payload: ${json.toString(2)}")
+    Log.d("OpenAIRequest", "Using API Key: Bearer ${if (apiKey.length > 12) "${apiKey.take(8)}...${apiKey.takeLast(4)}" else "key_too_short"}")
 
     // Prepare OkHttp request with longer timeouts
     val client = OkHttpClient.Builder()
@@ -88,7 +88,7 @@ suspend fun resendMealDataToOpenAI(mealData: String, userMessage: String): Strin
     val body = RequestBody.create("application/json".toMediaTypeOrNull(), json.toString())
     val request = Request.Builder()
         .url("https://api.openai.com/v1/chat/completions")  // Use chat completions API
-        .header("Authorization", "Bearer ${BuildConfig.OPENAI_API_KEY}")
+        .header("Authorization", "Bearer $apiKey")
         .header("Content-Type", "application/json")
         .post(body)
         .build()
@@ -182,8 +182,7 @@ Instructions:
 
  Output only the JSON object—no explanations, text, or headings outside the JSON.
  Use standard portion size conventions and conservatively high estimates if uncertain.
- If every ingredient or nutritional property cannot be reliably determined, set all fields except 'error' to null and provide a clear error message. If only some data are missing or estimated, set just those fields to null and include a specific warning in 'error'.
- Attempt to estimate as much as possible from partially ambiguous images, only setting undeterminable fields to null and clearly documenting uncertainty in 'error'. For non-food or invalid images, set all fields except 'error' to null with a descriptive error message.
+ If every ingredient or nutritional property cannot be reliably determined, set all fields except 'error' to null and provide a clear error message. If only some data are missing or estimated, set just those fields to null and include a specific warning in 'error'. Attempt to estimate as much as possible from partially ambiguous images, only setting undeterminable fields to null and clearly documenting uncertainty in 'error'. For non-food or invalid images, set all fields except 'error' to null with a descriptive error message.
  Preserve the schema-provided key order exactly in your output.
  All numeric values must be floats (even zero values, written as 0.0).
  Use only the provided units: g, mg, ml, kg, L, cup, tbsp, tsp. Convert nonstandard units when necessary; do not invent any units.

@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.Dp
 import com.composables.icons.lucide.Lucide
+import com.composables.icons.lucide.ShoppingBasket
 import com.composables.icons.lucide.Wheat
 import com.example.responsiveness.ui.theme.DesignTokens
 
@@ -261,7 +262,7 @@ fun ShimmerIngredientCard(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Lucide.Wheat,
+                    imageVector = Lucide.ShoppingBasket,
                     contentDescription = "Ingredient Icon",
                     tint = Color.White,
                     modifier = Modifier.size(tokens.shimmerIngredientIconSize)

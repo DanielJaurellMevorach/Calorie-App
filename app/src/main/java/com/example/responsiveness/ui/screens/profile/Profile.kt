@@ -300,7 +300,7 @@ fun ProfileScreen(
                                 modifier = Modifier.size(tokens.sDp(40.dp))
                             )
                             Text(
-                                text = "No personal or identifiable data is collected. Scanned meals are saved and tied to your anonymous account.",
+                                text = "No personal or identifiable data is collected. Your API key is stored locally.",
                                 color = Color.White,
                                 modifier = Modifier.padding(start = tokens.sDp(16.dp)),
                                 fontSize = tokens.calendarTextSize.times(1.2),
