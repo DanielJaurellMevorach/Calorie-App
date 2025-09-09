@@ -2,6 +2,7 @@ package com.example.responsiveness.ui.screens.mealdetails.components
 
 import android.annotation.SuppressLint
 import android.util.Log
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.LocalOverscrollFactory
 import androidx.compose.foundation.background
@@ -44,6 +45,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -51,6 +54,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.composables.icons.lucide.Beef
@@ -64,10 +68,6 @@ import com.example.anothercalorieapp.ui.components.mealdetails.IngredientCard
 import com.example.anothercalorieapp.ui.components.mealdetails.ShareAndQuantity
 import com.example.anothercalorieapp.ui.components.scanner.viewmodel.MealApiResponse
 import com.example.responsiveness.ui.theme.DesignTokens
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.ui.unit.Dp
 
 @OptIn(ExperimentalFoundationApi::class)
 @SuppressLint("UnusedBoxWithConstraintsScope")
@@ -99,9 +99,7 @@ fun CustomBottomSheet(
     }
 
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-        val scope = rememberCoroutineScope()
         val density = LocalDensity.current
-        val tokens = tokens
         val fullHeight = maxHeight
 
         val focusManager = LocalFocusManager.current
@@ -113,6 +111,20 @@ fun CustomBottomSheet(
         val sheetInitialHeight = tokens.sDp(200.dp)
 
         var sheetHeight by remember { mutableStateOf(sheetInitialHeight) }
+
+        // Measurement states for button alignment
+        var shareAndQuantityRowTop by remember { mutableStateOf<Dp?>(null) }
+        var correctionTitleHeight by remember { mutableStateOf<Dp?>(null) }
+
+        // Precomputed field height to avoid visible jump when entering correction mode
+        var precomputedFieldHeight by remember { mutableStateOf<Dp?>(null) }
+
+        // Constants for layout calculations
+        val spacerAfterTitle = tokens.sDp(24.dp)
+        val spacerAfterField = tokens.sDp(16.dp)
+        val estimatedTitleHeight = tokens.sDp(28.dp)
+        val minFieldHeight = tokens.sDp(120.dp)
+        val fallbackFieldHeight = tokens.sDp(164.dp)
 
         // Custom draggable bottom sheet styling (copied from MealDetailPageLoading)
         Column(
@@ -156,6 +168,9 @@ fun CustomBottomSheet(
                 if (isFixingMeal) {
                     BasicText(
                         "Meal Correction",
+                        modifier = Modifier.onGloballyPositioned { coords ->
+                            correctionTitleHeight = with(density) { coords.size.height.toDp() }
+                        },
                         style = TextStyle(
                             fontSize = tokens.headerFont,
                             color = Color.Black,
@@ -163,14 +178,32 @@ fun CustomBottomSheet(
                             textAlign = TextAlign.Center
                         )
                     )
-                    Spacer(modifier = Modifier.height(tokens.sDp(24.dp)))
+                    Spacer(modifier = Modifier.height(spacerAfterTitle))
+
+                    // Calculate dynamic height to align buttons with ShareAndQuantity row
+                    // Use precomputed height if available, otherwise compute on the fly
+                    val targetRowTop = shareAndQuantityRowTop
+                    val titleH = correctionTitleHeight
+
+                    val computedFieldHeight = precomputedFieldHeight ?: if (targetRowTop != null) {
+                        val effectiveTitleH = titleH ?: estimatedTitleHeight
+                        // Calculate: titleH + spacerAfterTitle + fieldHeight + spacerAfterField = targetRowTop
+                        (targetRowTop - effectiveTitleH - spacerAfterTitle - spacerAfterField).coerceAtLeast(minFieldHeight)
+                    } else {
+                        fallbackFieldHeight // fallback height
+                    }
+
+                    val animatedFieldHeight by animateDpAsState(
+                        targetValue = computedFieldHeight,
+                        label = "correctionFieldHeight"
+                    )
 
                     BasicTextField(
                         value = correctionMessage,
                         onValueChange = onCorrectionMessageChange,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(tokens.sDp(150.dp))
+                            .height(animatedFieldHeight)
                             .background(
                                 color = Color.LightGray.copy(alpha = 0.3f),
                                 shape = RoundedCornerShape(tokens.sDp(16.dp))
@@ -206,22 +239,23 @@ fun CustomBottomSheet(
                         }
                     )
 
-                    Spacer(modifier = Modifier.height(tokens.sDp(16.dp)))
+                    Spacer(modifier = Modifier.height(spacerAfterField))
 
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = tokens.sDp(8.dp)),
-                        horizontalArrangement = Arrangement.spacedBy(tokens.sDp(32.dp))
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Dismiss button
+                        // Dismiss button - matches Fix button size and position
                         Box(
                             modifier = Modifier
-                                .height(tokens.sDp(52.dp))
-                                .width(tokens.sDp(52.dp))
+                                .size(tokens.sDp(52.dp))
                                 .clip(RoundedCornerShape(tokens.sDp(26.dp)))
                                 .background(Color(0xFFF5F5F5))
-                                .clickable { onCancelFix() },
+                                .clickable {
+                                    precomputedFieldHeight = null // Clear precomputed height when canceling
+                                    onCancelFix()
+                                },
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
@@ -232,15 +266,16 @@ fun CustomBottomSheet(
                             )
                         }
 
-                        // Submit button
+                        // Submit button - matches quantity control width and position
                         Button(
                             onClick = {
                                 onSubmitCorrection()
                                 keyboardController?.hide()
                                 focusManager.clearFocus()
+                                // precomputedFieldHeight = null // Do NOT clear here; only clear on cancel/dismiss
                             },
                             modifier = Modifier
-                                .fillMaxWidth()
+                                .fillMaxWidth(0.4f)
                                 .height(tokens.sDp(52.dp)),
                             colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
                             shape = RoundedCornerShape(tokens.sDp(26.dp))
@@ -288,8 +323,19 @@ fun CustomBottomSheet(
                             Log.d("CustomBottomSheet", "onQuantityChange called with: $it")
                             onQuantityChange(it)
                         },
-                        onFixClick = onFixClick,
-                        tokens = tokens
+                        onFixClick = {
+                            // Precompute field height before entering correction mode
+                            val rowTop = shareAndQuantityRowTop
+                            if (rowTop != null) {
+                                val estimatedHeight = (rowTop - estimatedTitleHeight - spacerAfterTitle - spacerAfterField).coerceAtLeast(minFieldHeight)
+                                precomputedFieldHeight = estimatedHeight
+                            }
+                            onFixClick()
+                        },
+                        tokens = tokens,
+                        modifier = Modifier.onGloballyPositioned { coords ->
+                            shareAndQuantityRowTop = with(density) { coords.positionInParent().y.toDp() }
+                        }
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     CompositionLocalProvider(

@@ -12,7 +12,9 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import java.util.Calendar
 import java.util.Locale
 
@@ -91,19 +93,26 @@ class HomeViewModel(private val mealDao: MealDao) : ViewModel() {
             combine(
                 mealDao.getTodayMealsWithDetailsFlow(),
                 dateFlow
-            ) { mealsWithDetails, _ ->
-                if (mealsWithDetails.isEmpty()) {
+            ) { mealsWithDetails, currentDate ->
+                // Filter meals defensively by the emitted current date to ensure midnight rollover resets state
+                val mealsForCurrentDate = mealsWithDetails.filter { mealWithDetails ->
+                    val mealDate = Instant.ofEpochMilli(mealWithDetails.meal.created_at)
+                        .atZone(ZoneId.systemDefault()).toLocalDate()
+                    mealDate == currentDate
+                }
+
+                if (mealsForCurrentDate.isEmpty()) {
                     _todayCalories.value = 0.0
                     _todayProtein.value = 0.0
                     _todayCarbs.value = 0.0
                     _todayFat.value = 0.0
-                    HomeUiState() // return default empty state
+                    HomeUiState() // default empty state when new day starts or no meals
                 } else {
                     val morningMeals = mutableListOf<MealWithDetails>()
                     val afternoonMeals = mutableListOf<MealWithDetails>()
                     val eveningMeals = mutableListOf<MealWithDetails>()
 
-                    mealsWithDetails.forEach { mealWithDetails ->
+                    mealsForCurrentDate.forEach { mealWithDetails ->
                         val hour = Calendar.getInstance().apply { timeInMillis = mealWithDetails.meal.created_at }.get(Calendar.HOUR_OF_DAY)
                         when {
                             hour in 5..10 || hour in 0..4 -> morningMeals.add(mealWithDetails)
@@ -123,10 +132,10 @@ class HomeViewModel(private val mealDao: MealDao) : ViewModel() {
                     }
 
                     // Calculate today's totals for calories, protein, carbs, fat using NutritionEntity only
-                    val totalCalories = mealsWithDetails.sumOf { (it.nutrition?.energy_kcal ?: 0.0) * (it.meal.quantity ?: 1.0) }
-                    val totalProtein = mealsWithDetails.sumOf { (it.nutrition?.protein_g ?: 0.0) * (it.meal.quantity ?: 1.0) }
-                    val totalCarbs = mealsWithDetails.sumOf { (it.nutrition?.carbohydrates_g ?: 0.0) * (it.meal.quantity ?: 1.0) }
-                    val totalFat = mealsWithDetails.sumOf { (it.nutrition?.fat_g ?: 0.0) * (it.meal.quantity ?: 1.0) }
+                    val totalCalories = mealsForCurrentDate.sumOf { (it.nutrition?.energy_kcal ?: 0.0) * (it.meal.quantity ?: 1.0) }
+                    val totalProtein = mealsForCurrentDate.sumOf { (it.nutrition?.protein_g ?: 0.0) * (it.meal.quantity ?: 1.0) }
+                    val totalCarbs = mealsForCurrentDate.sumOf { (it.nutrition?.carbohydrates_g ?: 0.0) * (it.meal.quantity ?: 1.0) }
+                    val totalFat = mealsForCurrentDate.sumOf { (it.nutrition?.fat_g ?: 0.0) * (it.meal.quantity ?: 1.0) }
                     _todayCalories.value = totalCalories
                     _todayProtein.value = totalProtein
                     _todayCarbs.value = totalCarbs
