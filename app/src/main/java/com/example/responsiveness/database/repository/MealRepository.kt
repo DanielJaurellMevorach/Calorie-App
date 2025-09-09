@@ -19,7 +19,7 @@ class MealRepository(
 ) {
 
     suspend fun saveMealFromJson(
-        userId: Long, // Add userId parameter
+        userId: String, // Changed to String for new user ID system
         mealName: String,
         ingredients: List<Map<String, Any>>,
         nutrition: Map<String, Any>?,
@@ -120,21 +120,24 @@ class MealRepository(
         return mealDao.getTodayMealsWithDetailsFlow()
     }
 
-    fun getOrCreateUser(userId: Long = 1): Flow<UserEntity> = flow {
-        val userFlow = mealDao.getUser(userId)
-        val initialUser = userFlow.firstOrNull()
-
-        if (initialUser == null) {
+    suspend fun getOrCreateUser(): UserEntity {
+        val existingUser = mealDao.getUserSync()
+        return if (existingUser == null) {
             mealDao.insertDefaultUser()
+            mealDao.getUserSync()!!
+        } else {
+            existingUser
         }
-
-        emitAll(userFlow.filterNotNull())
     }
 
-    fun getUser(userId: Long = 1) = mealDao.getUser(userId)
-    suspend fun updateMaxCalories(userId: Long, maxCalories: Int) = mealDao.updateMaxCalories(userId, maxCalories)
-    suspend fun updateMaxCarbs(userId: Long, maxCarbs: Int) = mealDao.updateMaxCarbs(userId, maxCarbs)
-    suspend fun updateMaxProtein(userId: Long, maxProtein: Int) = mealDao.updateMaxProtein(userId, maxProtein)
-    suspend fun updateMaxFat(userId: Long, maxFat: Int) = mealDao.updateMaxFat(userId, maxFat)
-    suspend fun updateApiKey(userId: Long, apiKey: String) = mealDao.updateApiKey(userId, apiKey)
+    fun getUser(): Flow<UserEntity?> = mealDao.getUser()
+
+    suspend fun getUserSync(): UserEntity? = mealDao.getUserSync()
+
+    suspend fun updateMaxCalories(userId: String, maxCalories: Int) = mealDao.updateMaxCalories(userId, maxCalories)
+    suspend fun updateMaxCarbs(userId: String, maxCarbs: Int) = mealDao.updateMaxCarbs(userId, maxCarbs)
+    suspend fun updateMaxProtein(userId: String, maxProtein: Int) = mealDao.updateMaxProtein(userId, maxProtein)
+    suspend fun updateMaxFat(userId: String, maxFat: Int) = mealDao.updateMaxFat(userId, maxFat)
+    suspend fun updateApiKey(userId: String, apiKey: String) = mealDao.updateApiKey(userId, apiKey)
+    suspend fun updateLastPing(userId: String, lastPing: Long) = mealDao.updateLastPing(userId, lastPing)
 }

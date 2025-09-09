@@ -124,7 +124,7 @@ class HomeViewModel(private val mealDao: MealDao) : ViewModel() {
                 combine(
                     mealDao.getAllMealsWithDetails(),
                     dateFlow,
-                    mealDao.getUser() // Observe the user preferences flow
+                    mealDao.getUser() // Observe the single user preferences flow
                 ) { allMeals, currentDate, userEntity ->
                     // This block is executed whenever any of the flows emit a new value.
                     processData(allMeals, currentDate, userEntity)
@@ -162,7 +162,7 @@ class HomeViewModel(private val mealDao: MealDao) : ViewModel() {
     private fun processData(
         allMeals: List<MealWithDetails>,
         currentDate: LocalDate,
-        userEntity: UserEntity
+        userEntity: UserEntity?
     ): HomeState {
         val todayMeals = filterMealsByDate(allMeals, currentDate)
         val nutritionTotals = calculateNutritionTotals(todayMeals)
@@ -170,7 +170,13 @@ class HomeViewModel(private val mealDao: MealDao) : ViewModel() {
         val calendarData = createCalendarData(allMeals)
         val displayedMonth = currentDate.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault()))
 
-        Log.d("HomeViewModel", "Processing with User prefs -> maxCalories=${userEntity.maxCalories}, maxProtein=${userEntity.maxProtein}, maxCarbs=${userEntity.maxCarbs}, maxFat=${userEntity.maxFat}")
+        val maxCalories = userEntity?.maxCalories?.toDouble() ?: 2000.0
+        val maxProtein = userEntity?.maxProtein?.toDouble() ?: 150.0
+        val maxCarbs = userEntity?.maxCarbs?.toDouble() ?: 300.0
+        val maxFat = userEntity?.maxFat?.toDouble() ?: 100.0
+        val errorMessage = if (userEntity == null) "No user found in database." else null
+
+        Log.d("HomeViewModel", "Processing with User prefs -> maxCalories=$maxCalories, maxProtein=$maxProtein, maxCarbs=$maxCarbs, maxFat=$maxFat")
 
         return HomeState(
             uiState = HomeUiState(
@@ -184,12 +190,12 @@ class HomeViewModel(private val mealDao: MealDao) : ViewModel() {
             todayProtein = nutritionTotals.protein,
             todayCarbs = nutritionTotals.carbs,
             todayFat = nutritionTotals.fat,
-            maxCalories = userEntity.maxCalories.toDouble(),
-            maxProtein = userEntity.maxProtein.toDouble(),
-            maxCarbs = userEntity.maxCarbs.toDouble(),
-            maxFat = userEntity.maxFat.toDouble(),
+            maxCalories = maxCalories,
+            maxProtein = maxProtein,
+            maxCarbs = maxCarbs,
+            maxFat = maxFat,
             isLoading = false,
-            errorMessage = null
+            errorMessage = errorMessage
         )
     }
 

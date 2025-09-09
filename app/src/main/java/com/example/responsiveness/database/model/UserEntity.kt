@@ -5,10 +5,12 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "users")
 data class UserEntity(
-    @PrimaryKey(autoGenerate = true) val id: Long = 0L,
+    @PrimaryKey val id: String, // Changed to String for 20-character hash
     val maxCalories: Int,
     val maxCarbs: Int,
     val maxFat: Int,
     val maxProtein: Int,
-    val apiKey: String = ""
+    //val apiKey: String = "",
+    val apiKey: String? = null,
+    val lastPing: Long? = null
 )

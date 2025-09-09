@@ -16,8 +16,10 @@ class ProfileViewModel(private val repository: MealRepository) : ViewModel() {
 
     init {
         viewModelScope.launch {
-            // Use getOrCreateUser to ensure a non-null user is emitted (creates default user if missing)
-            repository.getOrCreateUser().collectLatest { user ->
+            // Ensure a user exists
+            repository.getOrCreateUser()
+            // Observe user changes
+            repository.getUser().collectLatest { user: UserEntity? ->
                 _userSettings.value = user
             }
         }

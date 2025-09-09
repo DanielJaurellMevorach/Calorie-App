@@ -111,30 +111,54 @@ interface MealDao {
     @Query("SELECT * FROM meals WHERE created_at BETWEEN :startMillis AND :endMillis ORDER BY created_at DESC")
     fun getMealsWithDetailsForDateRangeFlow(startMillis: Long, endMillis: Long): Flow<List<MealWithDetails>>
 
-    @Query("SELECT * FROM users WHERE id = :userId LIMIT 1")
-    fun getUser(userId: Long = 1): Flow<com.example.anothercalorieapp.database.UserEntity>
+    @Query("SELECT * FROM users LIMIT 1")
+    fun getUser(): Flow<com.example.anothercalorieapp.database.UserEntity?>
+
+    @Query("SELECT * FROM users LIMIT 1")
+    suspend fun getUserSync(): com.example.anothercalorieapp.database.UserEntity?
 
     @Query("UPDATE users SET maxCalories = :maxCalories WHERE id = :userId")
-    suspend fun updateMaxCalories(userId: Long, maxCalories: Int)
+    suspend fun updateMaxCalories(userId: String, maxCalories: Int)
 
     @Query("UPDATE users SET maxCarbs = :maxCarbs WHERE id = :userId")
-    suspend fun updateMaxCarbs(userId: Long, maxCarbs: Int)
+    suspend fun updateMaxCarbs(userId: String, maxCarbs: Int)
 
     @Query("UPDATE users SET maxProtein = :maxProtein WHERE id = :userId")
-    suspend fun updateMaxProtein(userId: Long, maxProtein: Int)
+    suspend fun updateMaxProtein(userId: String, maxProtein: Int)
 
     @Query("UPDATE users SET maxFat = :maxFat WHERE id = :userId")
-    suspend fun updateMaxFat(userId: Long, maxFat: Int)
+    suspend fun updateMaxFat(userId: String, maxFat: Int)
 
     @Query("UPDATE users SET apiKey = :apiKey WHERE id = :userId")
-    suspend fun updateApiKey(userId: Long, apiKey: String)
+    suspend fun updateApiKey(userId: String, apiKey: String)
+
+    @Query("UPDATE users SET lastPing = :lastPing WHERE id = :userId")
+    suspend fun updateLastPing(userId: String, lastPing: Long)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertDefaultUser(user: com.example.anothercalorieapp.database.UserEntity = com.example.anothercalorieapp.database.UserEntity(
-        id = 1,
-        maxCalories = 2000,
-        maxCarbs = 250,
-        maxFat = 70,
-        maxProtein = 150
-    ))
+    suspend fun insertUser(user: com.example.anothercalorieapp.database.UserEntity)
+
+    // Generate a random 20-character hash for user ID
+    suspend fun insertDefaultUser() {
+        val randomId = generateRandomUserId()
+        val defaultUser = com.example.anothercalorieapp.database.UserEntity(
+            id = randomId,
+            maxCalories = 2000,
+            maxCarbs = 250,
+            maxFat = 70,
+            maxProtein = 150
+        )
+        insertUser(defaultUser)
+    }
+
+    @Query("DELETE FROM users")
+    suspend fun deleteAllUsers()
+}
+
+// Helper function to generate 20-character random hash
+fun generateRandomUserId(): String {
+    val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+    return (1..20)
+        .map { chars.random() }
+        .joinToString("")
 }

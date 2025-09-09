@@ -15,7 +15,7 @@ data class MealEntity(
     val image_path: String? = null,
     val quantity: Double = 1.0, // Changed to Double for API compatibility
     val created_at: Long = System.currentTimeMillis(),
-    val userId: Long
+    val userId: String // Changed to String to match new user ID system
 )
 
 @Entity(tableName = "ingredients")

@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 
 @Database(
     entities = [MealEntity::class, IngredientEntity::class, NutritionEntity::class, UserEntity::class],
-    version = 2,
+    version = 4,
     exportSchema = false
 )
 abstract class MealDatabase : RoomDatabase() {
@@ -29,18 +29,15 @@ abstract class MealDatabase : RoomDatabase() {
                     MealDatabase::class.java,
                     "meal_database"
                 )
-                .fallbackToDestructiveMigration() // Add this for development
+                .fallbackToDestructiveMigration(true)
                 .build()
                 INSTANCE = instance
                 instance
             }
             // Seed default user if none exists
             CoroutineScope(Dispatchers.IO).launch {
-                val userCount = db.query("SELECT COUNT(*) FROM users", null).use { cursor ->
-                    cursor.moveToFirst()
-                    cursor.getInt(0)
-                }
-                if (userCount == 0) {
+                val user = db.mealDao().getUserSync()
+                if (user == null) {
                     db.mealDao().insertDefaultUser()
                 }
             }
