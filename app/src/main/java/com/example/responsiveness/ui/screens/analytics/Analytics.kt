@@ -114,6 +114,7 @@ fun Analytics(
 
         data class FilterState(val selectedFilter: String?, val date: LocalDate?, val searchText: String)
         val today = LocalDate.now()
+        // Use a single source of truth for filter state, and only set default on first launch
         val filterState = rememberSaveable(stateSaver = Saver(
             save = { listOf(it.selectedFilter, it.date?.toString(), it.searchText) },
             restore = {
@@ -127,9 +128,7 @@ fun Analytics(
 
         var localSearchText by remember(filterState.value.searchText) { mutableStateOf(filterState.value.searchText) }
 
-        // Track last selected day for calendar
-        val lastSelectedDay = remember { mutableStateOf<LocalDate?>(today) }
-        val lastSelectedFilter = remember { mutableStateOf<String?>("Today") }
+        // Remove lastSelectedDay and lastSelectedFilter, rely only on filterState
 
         val highlightedDates by remember(filterState.value) {
             derivedStateOf {
@@ -137,38 +136,36 @@ fun Analytics(
                     "Last 7 Days" -> List(7) { today.minusDays(it.toLong()) }
                     "Last 30 Days" -> List(30) { today.minusDays(it.toLong()) }
                     "Today" -> listOf(today)
-                    null -> emptyList() // No filter selected: remove all highlights
+                    null -> filterState.value.date?.let { listOf(it) } ?: emptyList() // Only highlight if a date is selected
                     else -> filterState.value.date?.let { listOf(it) } ?: emptyList()
                 }
             }
         }
+        // Only scroll to date if the filter is "Today" and the date is today, otherwise null
         val scrollToDate by remember(filterState.value) {
             derivedStateOf {
-                if (filterState.value.selectedFilter == "Today") today else null
+                if (filterState.value.selectedFilter == "Today" && filterState.value.date == today) today else null
             }
         }
 
         // --- Week change logic ---
         fun handleWeekChanged(visibleDates: List<LocalDate>) {
             val containsToday = visibleDates.contains(today)
-            val lastDay = lastSelectedDay.value
-            val lastFilter = lastSelectedFilter.value
+            val selected = filterState.value
             if (!containsToday) {
-                // If today is not visible, untoggle filter
-                if (filterState.value.selectedFilter != null) {
-                    filterState.value = filterState.value.copy(selectedFilter = null, date = lastDay, searchText = "")
+                // If today is not visible, untoggle filter, but keep selected date if set
+                if (selected.selectedFilter != null) {
+                    filterState.value = selected.copy(selectedFilter = null, date = selected.date, searchText = "")
                 }
             } else {
-                // If last selected day is today, retoggle Today
-                if (lastDay == today) {
+                // If filter was Today and today is visible, keep it
+                if (selected.selectedFilter == "Today") {
                     filterState.value = FilterState("Today", today, "")
-                } else if (lastDay != null && visibleDates.contains(lastDay)) {
-                    filterState.value = FilterState(null, lastDay, "")
+                } else if (selected.date != null && visibleDates.contains(selected.date)) {
+                    filterState.value = FilterState(null, selected.date, "")
                 }
             }
         }
-
-        val listState = rememberLazyListState()
 
         CompositionLocalProvider(
             LocalOverscrollFactory provides null
@@ -189,14 +186,10 @@ fun Analytics(
                         .fillMaxWidth()
                         .padding(horizontal = tokens.sDp(8.dp)),
                     onDateSelected = { date: LocalDate ->
-                        val today = LocalDate.now()
-                        lastSelectedDay.value = date
                         if (date == today) {
                             filterState.value = FilterState("Today", today, "")
-                            lastSelectedFilter.value = "Today"
                         } else {
                             filterState.value = FilterState(null, date, "")
-                            lastSelectedFilter.value = null
                         }
                     },
                     selectedDate = filterState.value.date,
@@ -241,14 +234,12 @@ fun Analytics(
                         .padding(horizontal = tokens.sDp(8.dp)),
                     selectedFilter = filterState.value.selectedFilter,
                     onFilterToggled = { filter ->
-                        lastSelectedFilter.value = filter
                         filterState.value = if (filterState.value.selectedFilter == filter) {
                             // If clicking the same filter, deselect it (go to "All" mode)
                             FilterState(null, null, "")
                         } else {
                             // Select the new filter
-                            val newDate = if (filter == "Today") LocalDate.now() else null
-                            lastSelectedDay.value = newDate
+                            val newDate = if (filter == "Today") today else null
                             FilterState(filter, newDate, "")
                         }
                     }
@@ -270,14 +261,12 @@ fun Analytics(
 
                     // Then check the selected filter
                     when (filterState.value.selectedFilter) {
-                        "Today" -> mealDate == LocalDate.now()
+                        "Today" -> mealDate == today
                         "Last 7 Days" -> {
-                            val today = LocalDate.now()
                             val sevenDaysAgo = today.minusDays(6)
                             mealDate in sevenDaysAgo..today
                         }
                         "Last 30 Days" -> {
-                            val today = LocalDate.now()
                             val thirtyDaysAgo = today.minusDays(30)
                             mealDate in thirtyDaysAgo..today
                         }

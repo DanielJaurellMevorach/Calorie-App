@@ -23,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow.Companion.Ellipsis
 import androidx.compose.ui.unit.dp
 import com.composables.icons.lucide.Lucide
+import com.composables.icons.lucide.ShoppingBasket
 import com.composables.icons.lucide.Wheat
 import com.example.responsiveness.ui.theme.DesignTokens
 
@@ -52,7 +53,7 @@ fun IngredientCard(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Lucide.Wheat,
+                    imageVector = Lucide.ShoppingBasket,
                     contentDescription = "Ingredient Icon",
                     tint = Color.White,
                     modifier = Modifier.size(tokens.sDp(24.dp))

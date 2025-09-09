@@ -37,6 +37,7 @@ import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.composables.icons.lucide.ChartNoAxesColumn
@@ -68,24 +69,27 @@ fun NavigationBar(
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
 
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                // padding for the entire nav bar
                 .padding(
-                    horizontal = navTokens.navHorizontalPadding,
-                    vertical = navTokens.navHorizontalPadding / 2
+                    horizontal = navTokens.navHorizontalPadding + 2.dp,
+                    vertical = (navTokens.navHorizontalPadding) / 2
                 ),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(
                 modifier = Modifier
-                    .height(navTokens.navContainerHeight)
-                    .width(navTokens.navContainerWidth(this@BoxWithConstraints.maxWidth))
+                    .height(navTokens.navContainerHeight + 2.dp)
+                    .width(navTokens.navContainerWidth(this@BoxWithConstraints.maxWidth) + 2.dp)
                     .background(
                         Color.Black.copy(alpha = backgroundOpacity),
-                        RoundedCornerShape(navTokens.navCornerRadius)
+                        RoundedCornerShape(navTokens.navCornerRadius + 2.dp)
                     )
+                    // Inner padding for nav items
                     .padding(
                         horizontal = navTokens.navInnerPaddingH,
                         vertical = navTokens.navInnerPaddingV
@@ -151,15 +155,15 @@ fun NavigationBar(
                 )
             }
 
-            Spacer(modifier = Modifier.width(navTokens.navSpacer))
+            Spacer(modifier = Modifier.width(navTokens.navSpacer + 2.dp))
 
             // Scanner button
             Box(
                 modifier = Modifier
-                    .size(navTokens.navContainerHeight)
+                    .size(navTokens.navContainerHeight + 2.dp)
                     .background(
                         Color.Black.copy(alpha = backgroundOpacity),
-                        RoundedCornerShape(navTokens.navCornerRadius)
+                        RoundedCornerShape(navTokens.navCornerRadius + 2.dp)
                     )
                     .clickable(
                         indication = null,
@@ -254,14 +258,15 @@ fun NavItem(
         Box(
             contentAlignment = Alignment.Center
         ) {
+            val labelFont = tokens.navLabelFontSize
             // Invisible bold text to reserve maximum width
             Text(
                 text = label,
-                fontSize = tokens.navLabelFontSize,
+                fontSize = labelFont,
                 fontWeight = FontWeight.Bold,
                 style = TextStyle(
                     platformStyle = PlatformTextStyle(includeFontPadding = false),
-                    lineHeight = tokens.navLabelFontSize
+                    lineHeight = labelFont
                 ),
                 color = Color.Transparent,
                 maxLines = 1
@@ -270,12 +275,12 @@ fun NavItem(
             Text(
                 text = label,
                 color = animatedColor.value,
-                fontSize = tokens.navLabelFontSize,
+                fontSize = labelFont,
                 fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
                 maxLines = 1,
                 style = TextStyle(
                     platformStyle = PlatformTextStyle(includeFontPadding = false),
-                    lineHeight = tokens.navLabelFontSize
+                    lineHeight = labelFont
                 )
             )
         }
