@@ -25,7 +25,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults.buttonColors
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
@@ -107,231 +106,225 @@ fun ProfileScreen(
                 additionalBottomPadding = tokens.navContainerHeight + tokens.navHorizontalPadding * 2 + tokens.sDp(16.dp)
             )
 
-            if (userSettings == null) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = Color.Black)
-                }
-            } else {
-                Column(
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(safePadding) // Use the calculated safe padding directly
+                    .padding(horizontal = tokens.outerInset), // Apply horizontal padding separately
+                verticalArrangement = Arrangement.spacedBy(tokens.sDp(16.dp)),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                SettingAdjustableWheel(
+                    initialValue = calories,
+                    unitName = "Calories",
+                    tokens = tokens,
+                    minValue = 0f,
+                    maxValue = 3000f,
+                    step = 1f,
+                    onValueChange = { profileViewModel.updateMaxCalories(it.roundToInt()) },
                     modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                        .padding(safePadding) // Use the calculated safe padding directly
-                        .padding(horizontal = tokens.outerInset), // Apply horizontal padding separately
-                    verticalArrangement = Arrangement.spacedBy(tokens.sDp(16.dp)),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                        .fillMaxWidth()
+                        .padding(horizontal = tokens.sDp(8.dp)),
+                    defaultExpanded = caloriesExpanded.value,
+                    onExpandedChange = { caloriesExpanded.value = it },
+                    fallbackValue = 2000f
+                )
+                SettingAdjustableWheel(
+                    initialValue = protein,
+                    unitName = "Protein",
+                    tokens = tokens,
+                    minValue = 0f,
+                    maxValue = 300f,
+                    step = 1f,
+                    onValueChange = { profileViewModel.updateMaxProtein(it.roundToInt()) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = tokens.sDp(8.dp)),
+                    defaultExpanded = proteinExpanded.value,
+                    onExpandedChange = { proteinExpanded.value = it },
+                    fallbackValue = 150f
+                )
+                SettingAdjustableWheel(
+                    initialValue = carbs,
+                    unitName = "Carbs",
+                    tokens = tokens,
+                    minValue = 0f,
+                    maxValue = 500f,
+                    step = 1f,
+                    onValueChange = { profileViewModel.updateMaxCarbs(it.roundToInt()) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = tokens.sDp(8.dp)),
+                    defaultExpanded = carbsExpanded.value,
+                    onExpandedChange = { carbsExpanded.value = it },
+                    fallbackValue = 250f
+                )
+                SettingAdjustableWheel(
+                    initialValue = fat,
+                    unitName = "Fat",
+                    tokens = tokens,
+                    minValue = 0f,
+                    maxValue = 200f,
+                    step = 1f,
+                    onValueChange = { profileViewModel.updateMaxFat(it.roundToInt()) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = tokens.sDp(8.dp)),
+                    defaultExpanded = fatExpanded.value,
+                    onExpandedChange = { fatExpanded.value = it },
+                    fallbackValue = 70f
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = tokens.sDp(8.dp))
+                        .clip(RoundedCornerShape(tokens.corner))
+                        .background(Color.Black)
+                        .padding(tokens.sDp(16.dp))
                 ) {
-                    SettingAdjustableWheel(
-                        initialValue = calories,
-                        unitName = "Calories",
-                        tokens = tokens,
-                        minValue = 0f,
-                        maxValue = 3000f,
-                        step = 1f,
-                        onValueChange = { profileViewModel.updateMaxCalories(it.roundToInt()) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = tokens.sDp(8.dp)),
-                        defaultExpanded = caloriesExpanded.value,
-                        onExpandedChange = { caloriesExpanded.value = it },
-                        fallbackValue = 2000f
-                    )
-                    SettingAdjustableWheel(
-                        initialValue = protein,
-                        unitName = "Protein",
-                        tokens = tokens,
-                        minValue = 0f,
-                        maxValue = 300f,
-                        step = 1f,
-                        onValueChange = { profileViewModel.updateMaxProtein(it.roundToInt()) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = tokens.sDp(8.dp)),
-                        defaultExpanded = proteinExpanded.value,
-                        onExpandedChange = { proteinExpanded.value = it },
-                        fallbackValue = 150f
-                    )
-                    SettingAdjustableWheel(
-                        initialValue = carbs,
-                        unitName = "Carbs",
-                        tokens = tokens,
-                        minValue = 0f,
-                        maxValue = 500f,
-                        step = 1f,
-                        onValueChange = { profileViewModel.updateMaxCarbs(it.roundToInt()) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = tokens.sDp(8.dp)),
-                        defaultExpanded = carbsExpanded.value,
-                        onExpandedChange = { carbsExpanded.value = it },
-                        fallbackValue = 250f
-                    )
-                    SettingAdjustableWheel(
-                        initialValue = fat,
-                        unitName = "Fat",
-                        tokens = tokens,
-                        minValue = 0f,
-                        maxValue = 200f,
-                        step = 1f,
-                        onValueChange = { profileViewModel.updateMaxFat(it.roundToInt()) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = tokens.sDp(8.dp)),
-                        defaultExpanded = fatExpanded.value,
-                        onExpandedChange = { fatExpanded.value = it },
-                        fallbackValue = 70f
-                    )
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = tokens.sDp(8.dp))
-                            .clip(RoundedCornerShape(tokens.corner))
-                            .background(Color.Black)
-                            .padding(tokens.sDp(16.dp))
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.Start
                     ) {
-                        Column(
+                        Text(
+                            text = "Use your own OpenAI API key. Processing will be made at your own expense.",
+                            color = Color.White,
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalAlignment = Alignment.Start
+                            textAlign = TextAlign.Start,
+                            fontSize = tokens.calendarTextSize.times(1.2),
+                        )
+                        Spacer(modifier = Modifier.height(tokens.sDp(16.dp)))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(tokens.sDp(16.dp)),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = "Use your own OpenAI API key. Processing will be made at your own expense.",
-                                color = Color.White,
-                                modifier = Modifier.fillMaxWidth(),
-                                textAlign = TextAlign.Start,
-                                fontSize = tokens.calendarTextSize.times(1.2),
-                            )
-                            Spacer(modifier = Modifier.height(tokens.sDp(16.dp)))
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(tokens.sDp(16.dp)),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                BasicTextField(
-                                    value = localApiKey,
-                                    onValueChange = { localApiKey = it },
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .height(48.dp)
-                                        .background(
-                                            color = Color.White,
-                                            shape = RoundedCornerShape(tokens.sDp(38.dp))
-                                        )
-                                        .padding(horizontal = tokens.sDp(16.dp)),
-                                    singleLine = true,
-                                    textStyle = TextStyle(
-                                        color = Color.Black
-                                    ),
-                                    keyboardOptions = KeyboardOptions.Default.copy(
-                                        imeAction = ImeAction.Done
-                                    ),
-                                    keyboardActions = KeyboardActions(
-                                        onDone = {
-                                            Log.d("ProfileScreen", "Keyboard 'Done' clicked.")
-                                            profileViewModel.submitApiKey(localApiKey)
-                                            Log.d("ProfileScreen", "API key submitted.")
-                                            keyboardController?.hide()
-                                            focusManager.clearFocus()
-                                            Log.d("ProfileScreen", "Focus clear requested.")
-                                        }
-                                    ),
-                                    decorationBox = { innerTextField ->
-                                        Box(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            contentAlignment = Alignment.CenterStart
-                                        ) {
-                                            if (localApiKey.isEmpty()) {
-                                                Text(
-                                                    text = "Insert key",
-                                                    color = Color.Gray.copy(alpha = 0.6f),
-                                                    fontSize = tokens.calendarTextSize.times(1.2),
-                                                )
-                                            }
-                                            innerTextField()
-                                        }
-                                    }
-                                )
-                                Button(
-                                    onClick = {
-                                        Log.d("ProfileScreen", "Paste button clicked.")
-                                        val clipText = clipboardManager.getText()?.text ?: ""
-                                        if (clipText.isNotBlank()) {
-                                            localApiKey = clipText
-                                            profileViewModel.submitApiKey(clipText)
-                                            Log.d("ProfileScreen", "API key pasted and submitted.")
-                                        }
+                            BasicTextField(
+                                value = localApiKey,
+                                onValueChange = { localApiKey = it },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(48.dp)
+                                    .background(
+                                        color = Color.White,
+                                        shape = RoundedCornerShape(tokens.sDp(38.dp))
+                                    )
+                                    .padding(horizontal = tokens.sDp(16.dp)),
+                                singleLine = true,
+                                textStyle = TextStyle(
+                                    color = Color.Black
+                                ),
+                                keyboardOptions = KeyboardOptions.Default.copy(
+                                    imeAction = ImeAction.Done
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onDone = {
+                                        Log.d("ProfileScreen", "Keyboard 'Done' clicked.")
+                                        profileViewModel.submitApiKey(localApiKey)
+                                        Log.d("ProfileScreen", "API key submitted.")
                                         keyboardController?.hide()
                                         focusManager.clearFocus()
-                                        Log.d("ProfileScreen", "Focus cleared on paste.")
-                                    },
-                                    modifier = Modifier
-                                        .height(48.dp)
-                                        .size(48.dp),
-                                    colors = buttonColors(
-                                        containerColor = Color.White
-                                    ),
-                                    shape = RoundedCornerShape(tokens.sDp(38.dp)),
-                                    contentPadding = PaddingValues(0.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Lucide.ClipboardCopy,
-                                        contentDescription = "Paste from clipboard",
-                                        tint = Color.Black
-                                    )
+                                        Log.d("ProfileScreen", "Focus clear requested.")
+                                    }
+                                ),
+                                decorationBox = { innerTextField ->
+                                    Box(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        contentAlignment = Alignment.CenterStart
+                                    ) {
+                                        if (localApiKey.isEmpty()) {
+                                            Text(
+                                                text = "Insert key",
+                                                color = Color.Gray.copy(alpha = 0.6f),
+                                                fontSize = tokens.calendarTextSize.times(1.2),
+                                            )
+                                        }
+                                        innerTextField()
+                                    }
                                 }
+                            )
+                            Button(
+                                onClick = {
+                                    Log.d("ProfileScreen", "Paste button clicked.")
+                                    val clipText = clipboardManager.getText()?.text ?: ""
+                                    if (clipText.isNotBlank()) {
+                                        localApiKey = clipText
+                                        profileViewModel.submitApiKey(clipText)
+                                        Log.d("ProfileScreen", "API key pasted and submitted.")
+                                    }
+                                    keyboardController?.hide()
+                                    focusManager.clearFocus()
+                                    Log.d("ProfileScreen", "Focus cleared on paste.")
+                                },
+                                modifier = Modifier
+                                    .height(48.dp)
+                                    .size(48.dp),
+                                colors = buttonColors(
+                                    containerColor = Color.White
+                                ),
+                                shape = RoundedCornerShape(tokens.sDp(38.dp)),
+                                contentPadding = PaddingValues(0.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Lucide.ClipboardCopy,
+                                    contentDescription = "Paste from clipboard",
+                                    tint = Color.Black
+                                )
                             }
                         }
                     }
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = tokens.sDp(8.dp))
-                            .clip(RoundedCornerShape(tokens.corner))
-                            .background(Color.Black)
-                            .padding(tokens.sDp(16.dp))
+                }
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = tokens.sDp(8.dp))
+                        .clip(RoundedCornerShape(tokens.corner))
+                        .background(Color.Black)
+                        .padding(tokens.sDp(16.dp))
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Lucide.ShieldQuestion,
-                                contentDescription = "Privacy Shield",
-                                tint = Color.White,
-                                modifier = Modifier.size(tokens.sDp(40.dp))
-                            )
-                            Text(
-                                text = "No personal or identifiable data is collected. Your API key is stored locally.",
-                                color = Color.White,
-                                modifier = Modifier.padding(start = tokens.sDp(16.dp)),
-                                fontSize = tokens.calendarTextSize.times(1.2),
-                            )
-                        }
+                        Icon(
+                            imageVector = Lucide.ShieldQuestion,
+                            contentDescription = "Privacy Shield",
+                            tint = Color.White,
+                            modifier = Modifier.size(tokens.sDp(40.dp))
+                        )
+                        Text(
+                            text = "No personal or identifiable data is collected. Your API key is stored locally.",
+                            color = Color.White,
+                            modifier = Modifier.padding(start = tokens.sDp(16.dp)),
+                            fontSize = tokens.calendarTextSize.times(1.2),
+                        )
                     }
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = tokens.sDp(8.dp))
-                            .clip(RoundedCornerShape(tokens.corner))
-                            .background(Color.Black)
-                            .padding(tokens.sDp(16.dp))
+                }
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = tokens.sDp(8.dp))
+                        .clip(RoundedCornerShape(tokens.corner))
+                        .background(Color.Black)
+                        .padding(tokens.sDp(16.dp))
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Lucide.OctagonAlert,
-                                contentDescription = "How to use disclaimer",
-                                tint = Color.White,
-                                modifier = Modifier.size(tokens.sDp(40.dp))
-                            )
-                            Text(
-                                text = "The use of this app does not guarantee a complete or accurate nutritional analysis. At most, it should be used as a rough estimate to provide insight into your habits.",
-                                color = Color.White,
-                                modifier = Modifier.padding(start = tokens.sDp(16.dp)),
-                                fontSize = tokens.calendarTextSize.times(1.2),
-                            )
-                        }
+                        Icon(
+                            imageVector = Lucide.OctagonAlert,
+                            contentDescription = "How to use disclaimer",
+                            tint = Color.White,
+                            modifier = Modifier.size(tokens.sDp(40.dp))
+                        )
+                        Text(
+                            text = "The use of this app does not guarantee a complete or accurate nutritional analysis. At most, it should be used as a rough estimate to provide insight into your habits.",
+                            color = Color.White,
+                            modifier = Modifier.padding(start = tokens.sDp(16.dp)),
+                            fontSize = tokens.calendarTextSize.times(1.2),
+                        )
                     }
                 }
             }

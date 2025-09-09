@@ -212,6 +212,9 @@ fun DatabaseMealDetailsScreen(
         if (isLoading) {
             // Show a neutral empty Box or a loading placeholder while the DB lookup is still loading
             Box(modifier = Modifier.fillMaxSize().background(Color.White))
+        } else if (vm.databaseMealDetailsState.collectAsState().value == null) {
+            // Initial loading state before fetchMealDetailsById is called
+            Box(modifier = Modifier.fillMaxSize().background(Color.White))
         } else {
             ErrorState(message = "Meal not found or still loading.")
         }
