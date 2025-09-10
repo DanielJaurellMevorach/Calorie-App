@@ -46,6 +46,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -87,10 +88,8 @@ fun CustomBottomSheet(
     onFixClick: () -> Unit,
     onCancelFix: () -> Unit,
     isLoading: Boolean,
-    // Optional override: if provided the bottom sheet will clamp its max height to this value
     maxSheetHeightOverride: Dp? = null
 ) {
-    // Helper to format nutrient values to max one decimal place
     fun formatNutrient(value: Double?): String {
         return if (value == null) "-"
         else if (value % 1.0 == 0.0) value.toInt().toString()
@@ -105,27 +104,13 @@ fun CustomBottomSheet(
         val keyboardController = LocalSoftwareKeyboardController.current
 
         val minSheetHeight = tokens.sDp(88.dp)
-        // Use the override when provided, otherwise fallback to previous behavior
         val maxSheetHeight = maxSheetHeightOverride ?: (fullHeight * 0.925f)
         val sheetInitialHeight = tokens.sDp(200.dp)
 
         var sheetHeight by remember { mutableStateOf(sheetInitialHeight) }
+        var correctionFieldHeight by remember { mutableStateOf<Dp?>(null) }
+        var nutrientSectionHeight by remember { mutableStateOf<Dp?>(null) }
 
-        // Measurement states for button alignment
-        var shareAndQuantityRowTop by remember { mutableStateOf<Dp?>(null) }
-        var correctionTitleHeight by remember { mutableStateOf<Dp?>(null) }
-
-        // Precomputed field height to avoid visible jump when entering correction mode
-        var precomputedFieldHeight by remember { mutableStateOf<Dp?>(null) }
-
-        // Constants for layout calculations
-        val spacerAfterTitle = tokens.sDp(24.dp)
-        val spacerAfterField = tokens.sDp(16.dp)
-        val estimatedTitleHeight = tokens.sDp(28.dp)
-        val minFieldHeight = tokens.sDp(120.dp)
-        val fallbackFieldHeight = tokens.sDp(164.dp)
-
-        // Custom draggable bottom sheet styling (copied from MealDetailPageLoading)
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -134,7 +119,6 @@ fun CustomBottomSheet(
                 .clip(RoundedCornerShape(topStart = tokens.sDp(40.dp), topEnd = tokens.sDp(40.dp)))
                 .background(Color.White)
         ) {
-            // Drag handle and gesture detector (light gray, matching loading page)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -156,20 +140,16 @@ fun CustomBottomSheet(
                 )
             }
 
-            // Content directly below handle bar
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f) // 👈 ensures consistent height behavior
+                    .weight(1f)
                     .padding(horizontal = tokens.innerPadding),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 if (isFixingMeal) {
                     BasicText(
                         "Meal Correction",
-                        modifier = Modifier.onGloballyPositioned { coords ->
-                            correctionTitleHeight = with(density) { coords.size.height.toDp() }
-                        },
                         style = TextStyle(
                             fontSize = tokens.headerFont,
                             color = Color.Black,
@@ -177,23 +157,10 @@ fun CustomBottomSheet(
                             textAlign = TextAlign.Center
                         )
                     )
-                    Spacer(modifier = Modifier.height(spacerAfterTitle))
-
-                    // Calculate dynamic height to align buttons with ShareAndQuantity row
-                    // Use precomputed height if available, otherwise compute on the fly
-                    val targetRowTop = shareAndQuantityRowTop
-                    val titleH = correctionTitleHeight
-
-                    val computedFieldHeight = precomputedFieldHeight ?: if (targetRowTop != null) {
-                        val effectiveTitleH = titleH ?: estimatedTitleHeight
-                        // Calculate: titleH + spacerAfterTitle + fieldHeight + spacerAfterField = targetRowTop
-                        (targetRowTop - effectiveTitleH - spacerAfterTitle - spacerAfterField).coerceAtLeast(minFieldHeight)
-                    } else {
-                        fallbackFieldHeight // fallback height
-                    }
+                    Spacer(modifier = Modifier.height(tokens.sDp(24.dp)))
 
                     val animatedFieldHeight by animateDpAsState(
-                        targetValue = computedFieldHeight,
+                        targetValue = correctionFieldHeight ?: tokens.sDp(164.dp), // Fallback
                         label = "correctionFieldHeight"
                     )
 
@@ -237,22 +204,19 @@ fun CustomBottomSheet(
                             }
                         }
                     )
-
-                    Spacer(modifier = Modifier.height(spacerAfterField))
+                    Spacer(modifier = Modifier.height(tokens.sDp(16.dp)))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Dismiss button - matches Fix button size and position
                         Box(
                             modifier = Modifier
                                 .size(tokens.sDp(52.dp))
                                 .clip(RoundedCornerShape(tokens.sDp(26.dp)))
                                 .background(Color(0xFFF5F5F5))
                                 .clickable {
-                                    precomputedFieldHeight = null // Clear precomputed height when canceling
                                     onCancelFix()
                                 },
                             contentAlignment = Alignment.Center
@@ -265,13 +229,11 @@ fun CustomBottomSheet(
                             )
                         }
 
-                        // Submit button - matches quantity control width and position
                         Button(
                             onClick = {
                                 onSubmitCorrection()
                                 keyboardController?.hide()
                                 focusManager.clearFocus()
-                                // precomputedFieldHeight = null // Do NOT clear here; only clear on cancel/dismiss
                             },
                             modifier = Modifier
                                 .fillMaxWidth(0.4f)
@@ -290,7 +252,6 @@ fun CustomBottomSheet(
                         ),
                         maxLines = 1,
                         style = TextStyle(
-                            //fontSize = tokens.headerFont,
                             color = Color.Black,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center
@@ -299,22 +260,28 @@ fun CustomBottomSheet(
 
                     Spacer(modifier = Modifier.height(tokens.sDp(24.dp)))
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(tokens.sDp(8.dp)),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        NutrientCard(Lucide.Flame, formatNutrient(nutrition?.energy_kcal?.times(quantity)), "Calories", tokens, Modifier.weight(1f))
-                        NutrientCard(Lucide.Beef, formatNutrient(nutrition?.protein_g?.times(quantity)), "Protein", tokens, Modifier.weight(1f))
-                        NutrientCard(Lucide.Wheat, formatNutrient(nutrition?.carbohydrates_g?.times(quantity)), "Carbs", tokens, Modifier.weight(1f))
-                        NutrientCard(Lucide.Droplets, formatNutrient(nutrition?.fat_g?.times(quantity)), "Fat", tokens, Modifier.weight(1f))
+                    // Box to measure the height of the nutrient and health score sections
+                    Box(modifier = Modifier.onSizeChanged { size ->
+                        nutrientSectionHeight = with(density) { size.height.toDp() }
+                    }) {
+                        Column {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(tokens.sDp(8.dp)),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                NutrientCard(Lucide.Flame, formatNutrient(nutrition?.energy_kcal?.times(quantity)), "Calories", tokens, Modifier.weight(1f))
+                                NutrientCard(Lucide.Beef, formatNutrient(nutrition?.protein_g?.times(quantity)), "Protein", tokens, Modifier.weight(1f))
+                                NutrientCard(Lucide.Wheat, formatNutrient(nutrition?.carbohydrates_g?.times(quantity)), "Carbs", tokens, Modifier.weight(1f))
+                                NutrientCard(Lucide.Droplets, formatNutrient(nutrition?.fat_g?.times(quantity)), "Fat", tokens, Modifier.weight(1f))
+                            }
+                            Spacer(modifier = Modifier.height(16.dp))
+                            HealthScore(
+                                healthGrade = healthGrade,
+                                tokens = tokens
+                            )
+                        }
                     }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-                    HealthScore(
-                        healthGrade = healthGrade,
-                        tokens = tokens
-                    )
                     Spacer(modifier = Modifier.height(16.dp))
                     ShareAndQuantity(
                         initialQuantity = quantity,
@@ -323,18 +290,12 @@ fun CustomBottomSheet(
                             onQuantityChange(it)
                         },
                         onFixClick = {
-                            // Precompute field height before entering correction mode
-                            val rowTop = shareAndQuantityRowTop
-                            if (rowTop != null) {
-                                val estimatedHeight = (rowTop - estimatedTitleHeight - spacerAfterTitle - spacerAfterField).coerceAtLeast(minFieldHeight)
-                                precomputedFieldHeight = estimatedHeight
+                            if (nutrientSectionHeight != null) {
+                                correctionFieldHeight = nutrientSectionHeight
                             }
                             onFixClick()
                         },
                         tokens = tokens,
-                        modifier = Modifier.onGloballyPositioned { coords ->
-                            shareAndQuantityRowTop = with(density) { coords.positionInParent().y.toDp() }
-                        }
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     CompositionLocalProvider(
@@ -352,7 +313,7 @@ fun CustomBottomSheet(
                                 Spacer(modifier = Modifier.height(tokens.sDp(8.dp)))
                             }
                             item {
-                                Spacer(modifier = Modifier.height(tokens.sDp(48.dp))) // Add bottom margin so last card is fully scrollable
+                                Spacer(modifier = Modifier.height(tokens.sDp(48.dp)))
                             }
                         }
                     }

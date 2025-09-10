@@ -82,7 +82,7 @@ fun SettingAdjustableWheel(
                 color = Color.White,
                 shape = RoundedCornerShape(tokens.sDp(38.dp))
             )
-            .padding(vertical = tokens.sDp(22.dp), horizontal = tokens.sDp(16.dp)) // Changed from 20.dp to 16.dp to match CalendarCalories
+            .padding(horizontal = tokens.sDp(16.dp), vertical = tokens.sDp(20.dp)) // Changed to match CalendarCalories exactly - same padding on all sides
             .fillMaxWidth()
     ) {
         Column(
@@ -102,14 +102,14 @@ fun SettingAdjustableWheel(
                         text = "$unitName amount: ",
                         color = Color.Black,
                         fontWeight = FontWeight.Normal,
-                        fontSize = tokens.sSp(14.sp), // Changed to match CalendarCalories month+year font size
+                        fontSize = tokens.sSp(14.sp), // Matches CalendarCalories month+year font size exactly
                         modifier = Modifier.padding(bottom = tokens.sDp(2.dp))
                     )
                     Text(
                         text = "${currentValue.roundToInt()}${if (unitName == "Calories") "" else "g"}",
                         color = Color.Black,
                         fontWeight = FontWeight.Bold,
-                        fontSize = tokens.sSp(14.sp), // Changed to match CalendarCalories month+year font size
+                        fontSize = tokens.sSp(14.sp), // Matches CalendarCalories month+year font size exactly
                         modifier = Modifier.padding(bottom = tokens.sDp(2.dp))
                     )
                 }

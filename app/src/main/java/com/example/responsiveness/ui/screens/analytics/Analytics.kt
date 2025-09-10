@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -321,9 +322,11 @@ fun ToggleButtonRow(
                 contentAlignment = Alignment.Center
             ) {
                 Box(
-                    modifier = Modifier.padding(horizontal = tokens.sDp(16.dp)),
+                    modifier = Modifier
+                        .padding(horizontal = tokens.sDp(16.dp)), // consistent with NavBar/Calendar
                     contentAlignment = Alignment.Center
                 ) {
+                    // Invisible bold text reserves maximum width
                     Text(
                         text = text,
                         color = Color.Transparent,
@@ -331,6 +334,8 @@ fun ToggleButtonRow(
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 1
                     )
+
+                    // Visible text with actual style
                     Text(
                         text = text,
                         color = textColor,
@@ -339,6 +344,7 @@ fun ToggleButtonRow(
                         maxLines = 1
                     )
                 }
+
             }
         }
     }

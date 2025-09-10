@@ -120,7 +120,11 @@ fun MealDetailsScreen(
             }
 
             IconButton(
-                onClick = { mealId?.let { id -> viewModel.deleteMeal(id, context) { navController.navigate(HomeRoute) } } },
+                onClick = {
+                    mealId?.let { id ->
+                        viewModel.deleteMeal(id, context) { onBackClick() }
+                    }
+                },
                 modifier = Modifier
                     .size(tokens.sDp(44.dp))
                     .background(Color.White, shape = RoundedCornerShape(tokens.sDp(32.dp)))
