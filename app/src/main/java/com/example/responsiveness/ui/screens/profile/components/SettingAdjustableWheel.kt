@@ -38,6 +38,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.composables.icons.lucide.ChevronDown
 import com.composables.icons.lucide.ChevronUp
 import com.composables.icons.lucide.Lucide
@@ -81,7 +82,7 @@ fun SettingAdjustableWheel(
                 color = Color.White,
                 shape = RoundedCornerShape(tokens.sDp(38.dp))
             )
-            .padding(tokens.sDp(20.dp))
+            .padding(vertical = tokens.sDp(22.dp), horizontal = tokens.sDp(16.dp)) // Changed from 20.dp to 16.dp to match CalendarCalories
             .fillMaxWidth()
     ) {
         Column(
@@ -101,14 +102,14 @@ fun SettingAdjustableWheel(
                         text = "$unitName amount: ",
                         color = Color.Black,
                         fontWeight = FontWeight.Normal,
-                        fontSize = tokens.calendarTextSize.times(1.4),
+                        fontSize = tokens.sSp(14.sp), // Changed to match CalendarCalories month+year font size
                         modifier = Modifier.padding(bottom = tokens.sDp(2.dp))
                     )
                     Text(
                         text = "${currentValue.roundToInt()}${if (unitName == "Calories") "" else "g"}",
                         color = Color.Black,
                         fontWeight = FontWeight.Bold,
-                        fontSize = tokens.calendarTextSize.times(1.4),
+                        fontSize = tokens.sSp(14.sp), // Changed to match CalendarCalories month+year font size
                         modifier = Modifier.padding(bottom = tokens.sDp(2.dp))
                     )
                 }
