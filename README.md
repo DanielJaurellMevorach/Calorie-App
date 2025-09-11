@@ -22,23 +22,33 @@ Get the latest APK from the [releases page]
 
 ## Screenshots
 
-### Home
-![Home](readme_photos/home.png)
+<div style="display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap;">
 
-### Logs
-![Logs](readme_photos/logs.png)
+  <a href="readme_photos/home.png">
+    <img src="readme_photos/home.png" alt="Home" width="220" />
+  </a>
 
-### Profile
-![Profile](readme_photos/profile.png)
+  <a href="readme_photos/logs.png">
+    <img src="readme_photos/logs.png" alt="Logs" width="220" />
+  </a>
 
-### Scanning
-![Scanning](readme_photos/scanning.png)
+  <a href="readme_photos/profile.png">
+    <img src="readme_photos/profile.png" alt="Profile" width="220" />
+  </a>
 
-### Awaiting Scan
-![Awaiting Scan](readme_photos/awaiting_scan.png)
+  <a href="readme_photos/scanning.png">
+    <img src="readme_photos/scanning.png" alt="Scanning" width="220" />
+  </a>
 
-### Meal Details
-![Meal Details](readme_photos/mealdetails.png)
+  <a href="readme_photos/awaiting_scan.png">
+    <img src="readme_photos/awaiting_scan.png" alt="Awaiting Scan" width="220" />
+  </a>
+
+  <a href="readme_photos/mealdetails.png">
+    <img src="readme_photos/mealdetails.png" alt="Meal Details" width="220" />
+  </a>
+
+</div>
 
 ## License
 MIT — see [LICENSE.md](LICENSE.md) for details.
