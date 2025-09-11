@@ -396,7 +396,7 @@ class HomeViewModel(private val mealDao: MealDao) : ViewModel() {
                     .addHeader("Content-Type", "application/json")
                     .post(body)
                     .build()
-                Log.d("PingDebug", "Sending POST to $url with userId $userId")
+                Log.d("PingDebug", "Sending POST with userId $userId")
                 val response = okHttpClient.newCall(request).execute()
                 val responseBody = response.body?.string()
                 Log.d("PingDebug", "Ping response: code=${response.code}, body=$responseBody")
