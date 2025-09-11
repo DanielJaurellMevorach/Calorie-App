@@ -59,4 +59,4 @@ MIT — see [LICENSE.md](LICENSE.md) for details.
 
 ## Known issues
 - Input fields can't be exited properly on older versions of android (confirmed working as of android 16 and broken on android 8).
-- Splash screen isn't working on older version of android (confirmed working as of android 16 and broken on android 8).
+- Splash screen isn't working on older versions of android (confirmed working as of android 16 and broken on android 8).
