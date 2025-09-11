@@ -43,9 +43,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // Coroutine to initialize data for home screen, analytics screen on default 'today', and max values on profile page during splash screen, and navigation safe area calculation
-
-
         setContent {
             ResponsivenessTheme {
 
@@ -62,7 +59,7 @@ class MainActivity : ComponentActivity() {
 
                 val analyticsViewModelFactory = remember { AnalyticsViewModelFactory(mealDao) }
                 val analyticsViewModel: AnalyticsViewModel = viewModel(factory = analyticsViewModelFactory)
-
+                // Use SafeAreaHandler for robust inset handling
                 // Use SafeAreaHandler for robust inset handling - fixes overlay issue
                 val safeContentPadding = rememberSafeContentPadding(
                     includeStatusBar = false,

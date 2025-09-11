@@ -5,15 +5,24 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.anothercalorieapp.database.MealWithDetails
 import com.example.anothercalorieapp.database.UserEntity
+import com.example.responsiveness.BuildConfig
 import com.example.responsiveness.database.dao.MealDao
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONObject
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -97,6 +106,9 @@ class HomeViewModel(private val mealDao: MealDao) : ViewModel() {
     private val _maxFat = MutableStateFlow(100.0)
     val maxFat: StateFlow<Double> = _maxFat.asStateFlow()
 
+    private val okHttpClient = OkHttpClient()
+    private var lastPingDate: LocalDate? = null
+
     // Date flow that emits when date changes for automatic refresh
     private val dateFlow = flow {
         var lastDate = LocalDate.now()
@@ -113,6 +125,12 @@ class HomeViewModel(private val mealDao: MealDao) : ViewModel() {
 
     init {
         observeAllData()
+        // Only use dateFlow to trigger pings, no initial call
+        viewModelScope.launch {
+            dateFlow.collectLatest {
+                tryPingUser()
+            }
+        }
     }
 
     /**
@@ -329,5 +347,64 @@ class HomeViewModel(private val mealDao: MealDao) : ViewModel() {
      */
     fun clearError() {
         _homeState.value = _homeState.value.copy(errorMessage = null)
+    }
+
+    private suspend fun tryPingUser() {
+        val user = mealDao.getCurrentUser() ?: run {
+            Log.d("PingDebug", "No user found in database, skipping ping.")
+            return
+        }
+        val userId = user.id
+        val lastPingMillis = user.lastPing
+        val lastPingDate = lastPingMillis?.let {
+            Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
+        }
+        val today = LocalDate.now()
+        if (lastPingDate == today) {
+            Log.d("PingDebug", "Ping already sent today for user $userId. Skipping.")
+            return // Already pinged today
+        }
+        Log.d("PingDebug", "Attempting ping for user $userId on $today (lastPing: $lastPingDate)")
+        // Launch async ping with one retry if it fails
+        viewModelScope.launch {
+            val success = sendPing(userId)
+            if (success) {
+                Log.d("PingDebug", "Ping successful for user $userId. Updating lastPing in database.")
+                mealDao.updateLastPing(userId, System.currentTimeMillis())
+            } else {
+                Log.d("PingDebug", "Ping failed for user $userId. Retrying once...")
+                val retrySuccess = sendPing(userId)
+                if (retrySuccess) {
+                    Log.d("PingDebug", "Ping retry successful for user $userId. Updating lastPing in database.")
+                    mealDao.updateLastPing(userId, System.currentTimeMillis())
+                } else {
+                    Log.d("PingDebug", "Ping retry failed for user $userId. Giving up for today.")
+                }
+            }
+        }
+    }
+
+    private suspend fun sendPing(userId: String): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                val url = BuildConfig.URL
+                val json = JSONObject().apply { put("userId", userId) }.toString()
+                val body = json.toRequestBody("application/json".toMediaTypeOrNull())
+                val request = Request.Builder()
+                    .url(url)
+                    .addHeader("Authorization", "Bearer " + BuildConfig.BEARER)
+                    .addHeader("Content-Type", "application/json")
+                    .post(body)
+                    .build()
+                Log.d("PingDebug", "Sending POST to $url with userId $userId")
+                val response = okHttpClient.newCall(request).execute()
+                val responseBody = response.body?.string()
+                Log.d("PingDebug", "Ping response: code=${response.code}, body=$responseBody")
+                response.use { it.isSuccessful }
+            } catch (e: Exception) {
+                Log.e("PingDebug", "Ping exception: ${e.message}", e)
+                false // Fail silently
+            }
+        }
     }
 }

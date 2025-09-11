@@ -22,6 +22,8 @@ android {
 
         buildConfigField("String", "OPENAI_API_KEY", "\"${project.findProperty("OPENAI_API_KEY") ?: ""}\"")
         buildConfigField("String", "PROMPT_TEMPLATE", "\"${project.findProperty("PROMPT_TEMPLATE") ?: ""}\"")
+        buildConfigField("String", "BEARER", "\"${project.findProperty("BEARER") ?: ""}\"")
+        buildConfigField("String", "URL", "\"${project.findProperty("URL") ?: ""}\"")
 
     }
 
@@ -69,26 +71,26 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
 
     // Icons
-    implementation("com.composables:icons-lucide:1.0.0")
+    implementation("com.composables:icons-lucide:1.1.0")
 
     // Coil
     implementation("io.coil-kt:coil-compose:2.7.0")
 
     // Landscapist
-    implementation("com.github.skydoves:landscapist-coil:2.4.0")
+    implementation("com.github.skydoves:landscapist-coil:2.5.2")
 
     // Navigation
     implementation(libs.navigation.compose)
     implementation(libs.kotlinx.serialization.json)
 
     // Room for local database
-    val room_version = "2.7.2"
+    val room_version = "2.8.0"
 
     ksp("androidx.room:room-compiler:$room_version")
     implementation("androidx.room:room-runtime:$room_version")
     implementation("androidx.room:room-ktx:${room_version}")
 
-    val camerax_version = "1.4.2"
+    val camerax_version = "1.5.0"
     implementation("androidx.camera:camera-core:${camerax_version}")
     implementation("androidx.camera:camera-camera2:${camerax_version}")
     implementation("androidx.camera:camera-lifecycle:${camerax_version}")
@@ -104,5 +106,5 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:5.1.0")
 
     // Viewmodel and LiveData
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.3")
 }

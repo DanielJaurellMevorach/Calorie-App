@@ -111,6 +111,7 @@ interface MealDao {
     @Query("SELECT * FROM meals WHERE created_at BETWEEN :startMillis AND :endMillis ORDER BY created_at DESC")
     fun getMealsWithDetailsForDateRangeFlow(startMillis: Long, endMillis: Long): Flow<List<MealWithDetails>>
 
+    // USER METHODS
     @Query("SELECT * FROM users LIMIT 1")
     fun getUser(): Flow<com.example.anothercalorieapp.database.UserEntity?>
 
@@ -153,6 +154,13 @@ interface MealDao {
 
     @Query("DELETE FROM users")
     suspend fun deleteAllUsers()
+
+    // USER METHODS
+    @Query("SELECT * FROM users LIMIT 1")
+    suspend fun getCurrentUser(): com.example.anothercalorieapp.database.UserEntity?
+
+    @Update
+    suspend fun updateUser(user: com.example.anothercalorieapp.database.UserEntity)
 }
 
 // Helper function to generate 20-character random hash
